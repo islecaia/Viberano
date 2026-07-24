@@ -1,0 +1,151 @@
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+
+<h2 class="sr-only">Pantalla de métricas mensuales de ReparaPRO — recuento de facturas procesadas por mes con media anual y distinción del mes en curso</h2>
+
+<div style="background:var(--color-background-secondary);padding:24px 0 28px;display:flex;justify-content:center;">
+<div style="width:375px;background:#F8FAFC;border-radius:44px;border:9px solid #1C1C1E;overflow:hidden;font-family:'Inter',system-ui,-apple-system,sans-serif;color:#0F172A;">
+
+  <div style="background:#FFFFFF;padding:14px 24px 8px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:15px;font-weight:600;color:#0F172A;">9:41</span>
+    <div style="display:flex;gap:5px;align-items:center;">
+      <i class="ti ti-wifi" aria-hidden="true" style="font-size:16px;color:#0F172A;"></i>
+      <i class="ti ti-battery-2" aria-hidden="true" style="font-size:16px;color:#0F172A;"></i>
+    </div>
+  </div>
+
+  <div style="background:#FFFFFF;padding:2px 16px 14px;border-bottom:1px solid #E2E8F0;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button aria-label="Volver" style="width:44px;height:44px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1E40AF;padding:0;margin-left:-10px;">
+        <i class="ti ti-arrow-left" aria-hidden="true" style="font-size:20px;"></i>
+      </button>
+      <i class="ti ti-chart-bar" aria-hidden="true" style="font-size:20px;color:#475569;"></i>
+      <h1 style="font-size:20px;font-weight:600;margin:0;color:#0F172A;line-height:28px;">Métricas mensuales</h1>
+    </div>
+  </div>
+
+  <div style="padding:16px;background:#F8FAFC;display:flex;flex-direction:column;gap:16px;">
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;">
+      <div style="background:#1E40AF;border-radius:12px;padding:14px;">
+        <p style="font-size:11px;font-weight:600;color:#BFDBFE;margin:0 0 6px;letter-spacing:0.5px;">ESTE MES</p>
+        <p style="font-size:32px;font-weight:700;color:#FFFFFF;margin:0;font-family:'JetBrains Mono',monospace;line-height:1;">31</p>
+        <div style="margin-top:8px;">
+          <span style="font-size:10px;background:rgba(255,255,255,0.16);color:#DBEAFE;padding:2px 7px;border-radius:4px;font-weight:600;">En curso</span>
+        </div>
+        <p style="font-size:11px;color:#93C5FD;margin:6px 0 0;">Julio 2026</p>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,0.06);">
+        <p style="font-size:11px;font-weight:600;color:#475569;margin:0 0 6px;letter-spacing:0.5px;">MEDIA MENSUAL</p>
+        <p style="font-size:32px;font-weight:700;color:#0F172A;margin:0;font-family:'JetBrains Mono',monospace;line-height:1;">43</p>
+        <div style="margin-top:8px;height:20px;"></div>
+        <p style="font-size:11px;color:#94A3B8;margin:6px 0 0;">Últimos 12 meses</p>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 14px 12px;box-shadow:0 1px 2px rgba(15,23,42,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span style="font-size:13px;font-weight:600;color:#0F172A;">Facturas procesadas / mes</span>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94A3B8;">
+          <svg width="20" height="8" aria-hidden="true" style="flex-shrink:0;"><line x1="0" y1="4" x2="20" y2="4" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+          media
+        </div>
+      </div>
+      <div style="position:relative;">
+        <div id="bars" style="display:flex;align-items:flex-end;gap:3px;height:100px;position:relative;z-index:2;"></div>
+        <div id="avg-rule" style="position:absolute;left:0;right:0;border-top:1.5px dashed #94A3B8;pointer-events:none;z-index:1;"></div>
+        <div id="xlabels" style="display:flex;gap:3px;margin-top:5px;"></div>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,0.06);">
+      <div style="padding:11px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:600;color:#0F172A;">Desglose mensual</span>
+        <span style="font-size:11px;color:#94A3B8;font-family:'JetBrains Mono',monospace;">vs. media (43)</span>
+      </div>
+      <div id="list"></div>
+      <div style="padding:10px 16px;border-top:1px solid #F1F5F9;">
+        <button onclick="sendPrompt('Muéstrame el histórico completo de facturas procesadas por mes')" style="background:none;border:none;color:#1E40AF;font-size:13px;font-weight:500;cursor:pointer;padding:2px 0;font-family:'Inter',system-ui,sans-serif;">Ver meses anteriores ↗</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background:#FFFFFF;border-top:1px solid #E2E8F0;display:flex;padding:6px 0 22px;">
+    <button style="flex:1;background:none;border:none;padding:8px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+      <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;">
+        <i class="ti ti-file-text" aria-hidden="true" style="font-size:24px;color:#94A3B8;"></i>
+        <span style="position:absolute;top:-3px;right:-8px;background:#DC2626;color:#FFFFFF;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;">5</span>
+      </span>
+      <span style="font-size:11px;color:#94A3B8;font-weight:400;">Facturas</span>
+    </button>
+    <button style="flex:1;background:none;border:none;padding:8px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+      <i class="ti ti-building" aria-hidden="true" style="font-size:24px;color:#94A3B8;"></i>
+      <span style="font-size:11px;color:#94A3B8;font-weight:400;">Proveedores</span>
+    </button>
+    <button style="flex:1;background:none;border:none;padding:8px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+      <i class="ti ti-scale" aria-hidden="true" style="font-size:24px;color:#94A3B8;"></i>
+      <span style="font-size:11px;color:#94A3B8;font-weight:400;">Conciliación</span>
+    </button>
+    <button style="flex:1;background:none;border:none;padding:8px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+      <i class="ti ti-layers" aria-hidden="true" style="font-size:24px;color:#1E40AF;"></i>
+      <span style="font-size:11px;color:#1E40AF;font-weight:600;">Actividad</span>
+    </button>
+  </div>
+
+</div>
+</div>
+
+<script>
+const MESES = [
+  {l:'Jul',a:'25',v:34},{l:'Ago',a:'25',v:41},{l:'Sep',a:'25',v:38},
+  {l:'Oct',a:'25',v:45},{l:'Nov',a:'25',v:52},{l:'Dic',a:'25',v:29},
+  {l:'Ene',a:'26',v:43},{l:'Feb',a:'26',v:39},{l:'Mar',a:'26',v:47},
+  {l:'Abr',a:'26',v:51},{l:'May',a:'26',v:44},{l:'Jun',a:'26',v:48},
+  {l:'Jul',a:'26',v:31,c:true}
+];
+const MAX=52,AVG=43,CH=100;
+const barsEl=document.getElementById('bars');
+const lblsEl=document.getElementById('xlabels');
+MESES.forEach(m=>{
+  const h=Math.max(Math.round((m.v/MAX)*CH),4);
+  const bar=document.createElement('div');
+  bar.style.cssText='flex:1;min-width:0;height:'+h+'px;border-radius:3px 3px 0 0;background:'+(m.c?'#1E40AF':'#DBEAFE')+';'+(m.c?'outline:2px solid #1E3A8A;outline-offset:-2px;':'');
+  barsEl.appendChild(bar);
+  const lbl=document.createElement('div');
+  lbl.style.cssText='flex:1;min-width:0;text-align:center;font-size:9px;color:'+(m.c?'#1E40AF':'#94A3B8')+';font-weight:'+(m.c?'600':'400')+';overflow:hidden;white-space:nowrap;font-family:Inter,system-ui,sans-serif;';
+  lbl.textContent=m.l;
+  lblsEl.appendChild(lbl);
+});
+const avgTop=CH-Math.round((AVG/MAX)*CH);
+document.getElementById('avg-rule').style.top=avgTop+'px';
+
+const LIST=[
+  {full:'Jul 2026',v:31,c:true},
+  {full:'Jun 2026',v:48},
+  {full:'May 2026',v:44},
+  {full:'Abr 2026',v:51},
+  {full:'Mar 2026',v:47},
+  {full:'Feb 2026',v:39},
+  {full:'Ene 2026',v:43}
+];
+const listEl=document.getElementById('list');
+LIST.forEach((d,i)=>{
+  const delta=d.c?null:d.v-AVG;
+  let badge='';
+  if(d.c){
+    badge='';
+  } else if(delta>0){
+    badge='<span style="font-size:10px;background:#DCFCE7;color:#14532D;padding:2px 7px;border-radius:4px;font-weight:600;">+'+delta+'</span>';
+  } else if(delta<0){
+    badge='<span style="font-size:10px;background:#FEE2E2;color:#7F1D1D;padding:2px 7px;border-radius:4px;font-weight:600;">'+delta+'</span>';
+  } else {
+    badge='<span style="font-size:10px;background:#F1F5F9;color:#475569;padding:2px 7px;border-radius:4px;font-weight:600;">= media</span>';
+  }
+  const notLast=i<LIST.length-1;
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;padding:12px 16px;'+(notLast?'border-bottom:1px solid #F1F5F9;':'')+(d.c?'background:#F8FAFC;':'');
+  row.innerHTML='<div style="flex:1;display:flex;align-items:center;gap:7px;"><span style="font-size:15px;font-weight:'+(d.c?'600':'400')+';color:'+(d.c?'#1E40AF':'#0F172A')+';">'+d.full+'</span>'+(d.c?'<span style="font-size:10px;background:#DBEAFE;color:#1E3A8A;padding:2px 7px;border-radius:4px;font-weight:600;">Este mes</span>':'')+'</div><div style="display:flex;align-items:center;gap:10px;">'+badge+'<span style="font-size:17px;font-weight:600;color:'+(d.c?'#1E40AF':'#0F172A')+';font-family:\'JetBrains Mono\',monospace;min-width:28px;text-align:right;">'+d.v+'</span></div>';
+  listEl.appendChild(row);
+});
+</script>

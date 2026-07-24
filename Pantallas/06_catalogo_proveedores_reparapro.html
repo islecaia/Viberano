@@ -1,0 +1,198 @@
+<h2 class="sr-only">Pantalla de catálogo de proveedores — lista con estado activo o inactivo, nombre, dominio y NIF; permite activar y desactivar</h2>
+
+<div style="background: var(--color-background-secondary); padding: 20px 12px; display: flex; justify-content: center; font-family: system-ui, -apple-system, sans-serif;">
+<div id="phone" style="width: 355px; background: #F8FAFC; border-radius: 42px; border: 8px solid #1E293B; overflow: hidden; position: relative;">
+
+  <div style="background: #F8FAFC; padding: 14px 24px 6px; display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-size: 13px; font-weight: 600; color: #0F172A; letter-spacing: -0.3px;">9:41</span>
+    <div style="display: flex; gap: 5px; align-items: center;">
+      <i class="ti ti-antenna-bars-5" style="font-size: 15px; color: #0F172A;" aria-hidden="true"></i>
+      <i class="ti ti-wifi" style="font-size: 15px; color: #0F172A;" aria-hidden="true"></i>
+      <i class="ti ti-battery" style="font-size: 15px; color: #0F172A;" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div style="padding: 6px 16px 10px; background: #F8FAFC;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h1 style="font-size: 20px; font-weight: 600; color: #0F172A; margin: 0; line-height: 28px;">Proveedores</h1>
+      <button onclick="sendPrompt('Añadir un proveedor nuevo al catálogo')" style="display: flex; align-items: center; gap: 4px; background: transparent; border: 1.5px solid #CBD5E1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-weight: 500; color: #0F172A; cursor: pointer; height: 36px;">
+        <i class="ti ti-plus" style="font-size: 15px;" aria-hidden="true"></i> Añadir
+      </button>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; height: 44px; display: flex; align-items: center; padding: 0 12px; gap: 8px;">
+      <i class="ti ti-search" style="color: #94A3B8; font-size: 18px;" aria-hidden="true"></i>
+      <span style="color: #94A3B8; font-size: 15px;">Buscar por nombre o NIF…</span>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px 12px; display: flex; gap: 8px;">
+    <button id="tab-all" onclick="filterBy('all')" style="background: #DBEAFE; border: none; border-radius: 6px; padding: 5px 10px; font-size: 13px; font-weight: 600; color: #1E40AF; cursor: pointer;">Todos <span id="cnt-all" style="font-weight: 400; opacity: 0.75;">8</span></button>
+    <button id="tab-active" onclick="filterBy('active')" style="background: transparent; border: 1px solid #E2E8F0; border-radius: 6px; padding: 5px 10px; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer;">Activos <span id="cnt-active" style="opacity: 0.75;">6</span></button>
+    <button id="tab-inactive" onclick="filterBy('inactive')" style="background: transparent; border: 1px solid #E2E8F0; border-radius: 6px; padding: 5px 10px; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer;">Inactivos <span id="cnt-inactive" style="opacity: 0.75;">2</span></button>
+  </div>
+
+  <div style="padding: 0 16px 6px;">
+    <span id="list-label" style="font-size: 11px; color: #94A3B8; font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase;">8 proveedores</span>
+  </div>
+
+  <div id="supplier-list" style="padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px;"></div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #E2E8F0; display: flex; padding: 10px 0 22px;">
+    <button onclick="sendPrompt('Ver la pestaña de Facturas')" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 6px 0;">
+      <i class="ti ti-file-text" style="font-size: 24px; color: #94A3B8;" aria-hidden="true"></i>
+      <span style="font-size: 11px; font-weight: 400; color: #94A3B8;">Facturas</span>
+    </button>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0;">
+      <i class="ti ti-building-2" style="font-size: 24px; color: #1E40AF;" aria-hidden="true"></i>
+      <span style="font-size: 11px; font-weight: 600; color: #1E40AF;">Proveedores</span>
+    </div>
+    <button onclick="sendPrompt('Ver la pestaña de Conciliación')" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 6px 0;">
+      <i class="ti ti-git-compare" style="font-size: 24px; color: #94A3B8;" aria-hidden="true"></i>
+      <span style="font-size: 11px; font-weight: 400; color: #94A3B8;">Conciliación</span>
+    </button>
+    <button onclick="sendPrompt('Ver la pestaña de Actividad')" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 6px 0;">
+      <i class="ti ti-layers" style="font-size: 24px; color: #94A3B8;" aria-hidden="true"></i>
+      <span style="font-size: 11px; font-weight: 400; color: #94A3B8;">Actividad</span>
+    </button>
+  </div>
+
+  <div id="overlay" style="display: none; position: absolute; inset: 0; background: rgba(15,23,42,0.45); z-index: 20; align-items: flex-end;">
+    <div style="background: #FFFFFF; border-radius: 16px 16px 0 0; padding: 16px 16px 24px; width: 100%; box-sizing: border-box;">
+      <div style="width: 36px; height: 4px; background: #E2E8F0; border-radius: 2px; margin: 0 auto 18px;"></div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+        <div id="modal-avatar" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <span id="modal-initials" style="font-size: 14px; font-weight: 600;"></span>
+        </div>
+        <div>
+          <p id="modal-name" style="font-size: 16px; font-weight: 600; color: #0F172A; margin: 0;"></p>
+          <p style="font-size: 13px; color: #475569; margin: 0;">Cambio de estado</p>
+        </div>
+      </div>
+      <p id="modal-msg" style="font-size: 15px; color: #0F172A; line-height: 24px; margin: 16px 0 20px;"></p>
+      <button id="modal-confirm" onclick="confirmToggle()" style="width: 100%; height: 48px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; color: #FFFFFF; cursor: pointer; margin-bottom: 10px;"></button>
+      <button onclick="cancelToggle()" style="width: 100%; height: 48px; background: transparent; border: 1.5px solid #CBD5E1; border-radius: 8px; font-size: 16px; font-weight: 500; color: #0F172A; cursor: pointer;">Cancelar</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const suppliers = [
+  { id:1, name:'Suministros Técnicos S.L.', domain:'suministrostec.es',     nif:'B12345678', active:true,  av:'ST', bg:'#DBEAFE', fg:'#1E40AF' },
+  { id:2, name:'Oficina Total S.A.',          domain:'oficinatotal.com',      nif:'A87654321', active:true,  av:'OT', bg:'#DCFCE7', fg:'#14532D' },
+  { id:3, name:'Mensajería Exprés',           domain:'mensajeriaexpres.es',   nif:'B23456789', active:true,  av:'ME', bg:'#FEF3C7', fg:'#78350F' },
+  { id:4, name:'CloudHost Spain',             domain:'cloudhost.es',          nif:'B34567890', active:true,  av:'CH', bg:'#E0F2FE', fg:'#0C4A6E' },
+  { id:5, name:'Material de Limpieza Norte',  domain:'limpieza-norte.es',     nif:'B45678901', active:true,  av:'ML', bg:'#F3E8FF', fg:'#4C1D95' },
+  { id:6, name:'Asesoría Garriga',            domain:'garriga-asesoria.com',  nif:'B56789012', active:true,  av:'AG', bg:'#DCFCE7', fg:'#14532D' },
+  { id:7, name:'Impresiones Rápidas',         domain:'impresionesrapidas.es', nif:'B67890123', active:false, av:'IR', bg:'#F1F5F9', fg:'#64748B' },
+  { id:8, name:'Fontanería Sánchez',          domain:'fontaneria-sanchez.es', nif:'B78901234', active:false, av:'FS', bg:'#F1F5F9', fg:'#64748B' },
+];
+
+let filter = 'all';
+let pendingId = null;
+
+function filtered() {
+  if (filter === 'active')   return suppliers.filter(s => s.active);
+  if (filter === 'inactive') return suppliers.filter(s => !s.active);
+  return suppliers;
+}
+
+function render() {
+  const list = document.getElementById('supplier-list');
+  const data = filtered();
+  const active = suppliers.filter(s => s.active).length;
+  const inactive = suppliers.length - active;
+  document.getElementById('cnt-all').textContent = suppliers.length;
+  document.getElementById('cnt-active').textContent = active;
+  document.getElementById('cnt-inactive').textContent = inactive;
+  const labels = { all: suppliers.length + ' proveedores', active: active + ' proveedores', inactive: inactive + ' proveedores' };
+  document.getElementById('list-label').textContent = labels[filter];
+
+  list.innerHTML = data.map(s => {
+    const chipBg  = s.active ? '#DCFCE7' : '#F1F5F9';
+    const chipTxt = s.active ? '#14532D' : '#334155';
+    const chipDot = s.active ? '#16A34A' : '#64748B';
+    const trackBg = s.active ? '#1E40AF' : '#CBD5E1';
+    const knobLeft = s.active ? '22px' : '3px';
+    return `
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(15,23,42,0.06);display:flex;align-items:center;gap:12px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:${s.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:13px;font-weight:600;color:${s.fg};">${s.av}</span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:600;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+        <div style="font-size:13px;color:#475569;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.domain}</div>
+        <div style="font-size:12px;color:#94A3B8;font-family:'JetBrains Mono','Roboto Mono',monospace;margin-top:2px;letter-spacing:0.3px;">${s.nif}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+        <span style="background:${chipBg};color:${chipTxt};border-radius:6px;padding:3px 7px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+          <span style="width:6px;height:6px;border-radius:50%;background:${chipDot};display:inline-block;flex-shrink:0;"></span>
+          ${s.active ? 'ACTIVO' : 'INACTIVO'}
+        </span>
+        <label aria-label="${s.active ? 'Desactivar' : 'Activar'} ${s.name}" style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <input type="checkbox" ${s.active ? 'checked' : ''} onchange="requestToggle(${s.id})" style="opacity:0;width:0;height:0;position:absolute;">
+          <span style="position:absolute;inset:0;background:${trackBg};border-radius:12px;">
+            <span style="position:absolute;top:3px;left:${knobLeft};width:18px;height:18px;background:#FFFFFF;border-radius:50%;transition:left 0.15s;"></span>
+          </span>
+        </label>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterBy(f) {
+  filter = f;
+  ['all','active','inactive'].forEach(k => {
+    const b = document.getElementById('tab-' + k);
+    if (k === f) {
+      b.style.cssText = 'background:#DBEAFE;border:none;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:600;color:#1E40AF;cursor:pointer;';
+    } else {
+      b.style.cssText = 'background:transparent;border:1px solid #E2E8F0;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:500;color:#475569;cursor:pointer;';
+    }
+  });
+  render();
+}
+
+function requestToggle(id) {
+  const s = suppliers.find(x => x.id === id);
+  pendingId = id;
+  document.getElementById('modal-name').textContent = s.name;
+  document.getElementById('modal-initials').textContent = s.av;
+  const av = document.getElementById('modal-avatar');
+  av.style.background = s.bg;
+  document.getElementById('modal-initials').style.color = s.fg;
+  if (s.active) {
+    document.getElementById('modal-msg').textContent = '¿Desactivar este proveedor? Las facturas históricas se conservarán.';
+    const btn = document.getElementById('modal-confirm');
+    btn.textContent = 'Desactivar';
+    btn.style.background = '#DC2626';
+  } else {
+    document.getElementById('modal-msg').textContent = '¿Activar este proveedor? Podrá volver a recibir y procesar facturas.';
+    const btn = document.getElementById('modal-confirm');
+    btn.textContent = 'Activar';
+    btn.style.background = '#1E40AF';
+  }
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+function confirmToggle() {
+  const s = suppliers.find(x => x.id === pendingId);
+  if (s) {
+    s.active = !s.active;
+    if (!s.active) { s.bg = '#F1F5F9'; s.fg = '#64748B'; }
+    else { const orig = [{bg:'#DBEAFE',fg:'#1E40AF'},{bg:'#DCFCE7',fg:'#14532D'},{bg:'#FEF3C7',fg:'#78350F'},{bg:'#E0F2FE',fg:'#0C4A6E'},{bg:'#F3E8FF',fg:'#4C1D95'},{bg:'#DCFCE7',fg:'#14532D'}]; const o = orig[s.id - 1] || orig[0]; s.bg = o.bg; s.fg = o.fg; }
+  }
+  pendingId = null;
+  document.getElementById('overlay').style.display = 'none';
+  render();
+}
+
+function cancelToggle() {
+  pendingId = null;
+  document.getElementById('overlay').style.display = 'none';
+  render();
+}
+
+render();
+</script>

@@ -1,0 +1,153 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<h2 class="sr-only">Pantalla de detalle de factura de ReparaPRO — estado REVISIÓN MANUAL, proveedor identificado, acciones de aprobar, escalar y rechazar</h2>
+
+<div style="display:flex;justify-content:center;padding:24px 0 16px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);">
+  <div style="width:355px;background:#F8FAFC;border-radius:36px;border:8px solid #18181B;overflow:hidden;font-family:'Inter',system-ui,-apple-system,sans-serif;box-sizing:border-box;">
+
+    <!-- Status bar -->
+    <div style="background:#FFFFFF;padding:10px 20px 6px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;font-weight:600;color:#0F172A;">9:41</span>
+      <div style="display:flex;gap:5px;align-items:center;">
+        <i class="ti ti-signal-4g" style="font-size:14px;color:#0F172A;" aria-hidden="true"></i>
+        <i class="ti ti-wifi" style="font-size:14px;color:#0F172A;" aria-hidden="true"></i>
+        <i class="ti ti-battery-2" style="font-size:15px;color:#0F172A;" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;padding:10px 16px 10px 8px;display:flex;align-items:center;gap:4px;">
+      <button style="background:none;border:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#1E40AF;flex-shrink:0;" aria-label="Volver">
+        <i class="ti ti-arrow-left" style="font-size:22px;" aria-hidden="true"></i>
+      </button>
+      <div style="flex:1;min-width:0;">
+        <p style="margin:0;font-size:17px;font-weight:600;color:#0F172A;line-height:1.3;">Detalle de factura</p>
+        <p style="margin:0;font-size:11px;color:#94A3B8;line-height:1.4;">Recibida el 12 jun. 2025 · 08:34</p>
+      </div>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:#FEF3C7;color:#78350F;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#D97706;flex-shrink:0;display:inline-block;"></span>
+        REVISIÓN MANUAL
+      </span>
+    </div>
+
+    <!-- Content area -->
+    <div style="background:#F8FAFC;padding:14px 14px 0;display:flex;flex-direction:column;gap:10px;">
+
+      <!-- Motivo banner -->
+      <div style="background:#FEF3C7;border:1px solid #D97706;border-radius:8px;padding:12px;display:flex;gap:9px;align-items:flex-start;">
+        <i class="ti ti-alert-circle" style="font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px;" aria-hidden="true"></i>
+        <div>
+          <p style="margin:0 0 2px;font-size:11px;font-weight:600;color:#78350F;letter-spacing:0.03em;">MOTIVO DE REVISIÓN</p>
+          <p style="margin:0;font-size:13px;color:#78350F;line-height:1.45;">Proveedor no encontrado en el catálogo.</p>
+        </div>
+      </div>
+
+      <!-- Proveedor card -->
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;">
+        <p style="margin:0 0 11px;font-size:11px;font-weight:600;color:#94A3B8;letter-spacing:0.05em;">PROVEEDOR</p>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:38px;height:38px;border-radius:9px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-building-2" style="font-size:19px;color:#1E40AF;" aria-hidden="true"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <p style="margin:0 0 2px;font-size:15px;font-weight:500;color:#0F172A;line-height:1.3;">Suministros Técnicos Valera, S.L.</p>
+            <p style="margin:0 0 10px;font-size:12px;font-family:'JetBrains Mono','Roboto Mono',monospace;color:#94A3B8;">B-28745912</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;gap:4px;background:#F1F5F9;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:#334155;">
+                <i class="ti ti-x" style="font-size:12px;color:#64748B;" aria-hidden="true"></i>
+                No acreditado
+              </span>
+              <button style="background:none;border:none;color:#1E40AF;font-size:13px;font-weight:500;font-family:'Inter',system-ui,sans-serif;cursor:pointer;min-height:44px;padding:0 2px;">Crear proveedor</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos extraídos card -->
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;">
+        <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#94A3B8;letter-spacing:0.05em;">DATOS EXTRAÍDOS</p>
+
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #F1F5F9;">
+          <span style="font-size:13px;color:#475569;">N.º de factura</span>
+          <span style="font-size:12px;font-family:'JetBrains Mono',monospace;color:#475569;">FAC-2024-0389</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #F1F5F9;">
+          <span style="font-size:13px;color:#475569;">Fecha de emisión</span>
+          <span style="font-size:13px;color:#0F172A;">12 jun. 2025</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #F1F5F9;">
+          <span style="font-size:13px;color:#475569;">Base imponible</span>
+          <span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:#0F172A;">1.240,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #F1F5F9;">
+          <span style="font-size:13px;color:#475569;">IVA (21 %)</span>
+          <span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:#0F172A;">260,40 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0 0;">
+          <span style="font-size:15px;font-weight:500;color:#0F172A;">Total con IVA</span>
+          <span style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#0F172A;letter-spacing:-0.02em;">1.500,40 €</span>
+        </div>
+      </div>
+
+      <!-- Evidencia card -->
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;">
+        <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#94A3B8;letter-spacing:0.05em;">EVIDENCIA</p>
+        <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid #F1F5F9;min-height:44px;">
+          <i class="ti ti-mail" style="font-size:17px;color:#94A3B8;flex-shrink:0;" aria-hidden="true"></i>
+          <span style="font-size:13px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">proveedor@valera.es</span>
+          <button style="background:none;border:none;color:#1E40AF;font-size:13px;font-weight:500;font-family:'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap;padding:0;">Ver correo</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:6px 0;min-height:44px;">
+          <i class="ti ti-paperclip" style="font-size:17px;color:#94A3B8;flex-shrink:0;" aria-hidden="true"></i>
+          <span style="font-size:13px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">factura_valera_jun25.pdf</span>
+          <button style="background:none;border:none;color:#1E40AF;font-size:13px;font-weight:500;font-family:'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap;padding:0;">Ver PDF</button>
+        </div>
+      </div>
+
+    </div><!-- end content area -->
+
+    <!-- Bottom action bar -->
+    <div style="background:#FFFFFF;border-top:1px solid #E2E8F0;padding:12px 14px 24px;display:flex;gap:8px;margin-top:14px;">
+      <button style="flex:1;height:48px;background:#FFFFFF;border:1.5px solid #DC2626;border-radius:8px;color:#DC2626;font-size:14px;font-weight:600;font-family:'Inter',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <i class="ti ti-x" style="font-size:16px;" aria-hidden="true"></i>
+        Rechazar
+      </button>
+      <button style="flex:1;height:48px;background:#FFFFFF;border:1.5px solid #CBD5E1;border-radius:8px;color:#0F172A;font-size:14px;font-weight:500;font-family:'Inter',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <i class="ti ti-arrow-up-right" style="font-size:16px;" aria-hidden="true"></i>
+        Escalar
+      </button>
+      <button style="flex:1;height:48px;background:#1E40AF;border:none;border-radius:8px;color:#FFFFFF;font-size:14px;font-weight:600;font-family:'Inter',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <i class="ti ti-check" style="font-size:16px;" aria-hidden="true"></i>
+        Aprobar
+      </button>
+    </div>
+
+    <!-- Bottom tab bar -->
+    <div style="background:#FFFFFF;border-top:1px solid #E2E8F0;padding:8px 0 12px;display:flex;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;">
+        <span style="position:absolute;top:-2px;right:22px;min-width:16px;height:16px;background:#DC2626;border-radius:9999px;font-size:10px;font-weight:700;color:#FFFFFF;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;padding:0 3px;box-sizing:border-box;">3</span>
+        <i class="ti ti-file-text" style="font-size:22px;color:#1E40AF;" aria-hidden="true"></i>
+        <span style="font-size:10px;font-weight:600;color:#1E40AF;">Facturas</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <i class="ti ti-building-2" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+        <span style="font-size:10px;font-weight:400;color:#94A3B8;">Proveedores</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <i class="ti ti-git-compare" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+        <span style="font-size:10px;font-weight:400;color:#94A3B8;">Conciliación</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <i class="ti ti-layers" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+        <span style="font-size:10px;font-weight:400;color:#94A3B8;">Actividad</span>
+      </div>
+    </div>
+
+    <!-- Home indicator -->
+    <div style="background:#FFFFFF;padding:0 0 8px;display:flex;justify-content:center;">
+      <div style="width:120px;height:4px;background:#1a1a1a;border-radius:9999px;opacity:0.2;"></div>
+    </div>
+
+  </div>
+</div>

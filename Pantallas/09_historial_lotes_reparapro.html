@@ -1,0 +1,589 @@
+<style>
+:root {
+  --rp-bg: #F8FAFC;
+  --rp-surface: #FFFFFF;
+  --rp-surface-raised: #F1F5F9;
+  --rp-border: #E2E8F0;
+  --rp-border-strong: #CBD5E1;
+  --rp-text-primary: #0F172A;
+  --rp-text-secondary: #475569;
+  --rp-text-muted: #94A3B8;
+  --rp-primary: #1E40AF;
+  --rp-primary-light: #DBEAFE;
+  --rp-primary-dark: #1E3A8A;
+  --rp-success: #16A34A;
+  --rp-warning: #D97706;
+  --rp-danger: #DC2626;
+  --rp-danger-light: #FEE2E2;
+  --rp-info: #0284C7;
+  --rp-mono: 'JetBrains Mono', 'Roboto Mono', monospace;
+  --rp-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--rp-sans); }
+
+.phone {
+  max-width: 390px;
+  margin: 0 auto;
+  background: var(--rp-bg);
+  min-height: 820px;
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.status-bar {
+  background: var(--rp-surface);
+  padding: 14px 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.status-bar .time {
+  font-family: var(--rp-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-text-primary);
+}
+.status-bar .icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--rp-text-primary);
+  font-size: 15px;
+}
+
+.nav-header {
+  background: var(--rp-surface);
+  padding: 10px 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 0.5px solid var(--rp-border);
+}
+.nav-back {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  color: var(--rp-primary);
+  flex-shrink: 0;
+}
+.nav-header h1 {
+  font-family: var(--rp-sans);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--rp-text-primary);
+  flex: 1;
+  line-height: 28px;
+}
+.nav-action {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  color: var(--rp-text-secondary);
+  flex-shrink: 0;
+}
+
+.filter-bar {
+  background: var(--rp-surface);
+  padding: 0 16px 12px;
+  display: flex;
+  gap: 8px;
+}
+.filter-pill {
+  font-family: var(--rp-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--rp-border-strong);
+  color: var(--rp-text-secondary);
+  background: transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.filter-pill.active {
+  background: var(--rp-primary-light);
+  border-color: var(--rp-primary);
+  color: var(--rp-primary);
+}
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.batch-card {
+  background: var(--rp-surface);
+  border: 0.5px solid var(--rp-border);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.06);
+}
+
+.batch-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.batch-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.batch-id {
+  font-family: var(--rp-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rp-text-secondary);
+}
+.batch-time {
+  font-family: var(--rp-sans);
+  font-size: 11px;
+  color: var(--rp-text-muted);
+  margin-top: 2px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--rp-sans);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-chip .dot {
+  width: 6px; height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.chip-completado { background: #DCFCE7; color: #14532D; }
+.chip-completado .dot { background: #16A34A; }
+.chip-errores { background: #FEE2E2; color: #7F1D1D; }
+.chip-errores .dot { background: #DC2626; }
+.chip-interrumpido { background: #FEF3C7; color: #78350F; }
+.chip-interrumpido .dot { background: #D97706; }
+
+.batch-scope {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--rp-text-secondary);
+  font-size: 13px;
+}
+.batch-scope i { font-size: 14px; flex-shrink: 0; }
+.scope-sep { color: var(--rp-border-strong); }
+
+.results-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.result-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-family: var(--rp-sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+.result-pill .count {
+  font-family: var(--rp-mono);
+  font-size: 12px;
+}
+.rp-procesada    { background: #DCFCE7; color: #14532D; }
+.rp-revision     { background: #FEF3C7; color: #78350F; }
+.rp-duplicado    { background: #F3E8FF; color: #4C1D95; }
+.rp-nofactura    { background: #F1F5F9; color: #334155; }
+.rp-venta        { background: #E0F2FE; color: #0C4A6E; }
+
+.divider {
+  height: 0.5px;
+  background: var(--rp-border);
+  margin: 10px 0;
+}
+
+.batch-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.footer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.footer-row i { font-size: 15px; flex-shrink: 0; }
+.footer-label {
+  color: var(--rp-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  min-width: 58px;
+}
+.footer-value {
+  color: var(--rp-text-secondary);
+  font-size: 13px;
+  flex: 1;
+}
+.footer-value.mono {
+  font-family: var(--rp-mono);
+  color: var(--rp-text-primary);
+}
+.error-text { color: var(--rp-danger); }
+.continuation-text { color: var(--rp-info); font-family: var(--rp-mono); font-size: 12px; }
+
+.btn-continuar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background: var(--rp-primary);
+  color: #FFFFFF;
+  font-family: var(--rp-sans);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-continuar i { font-size: 16px; }
+
+.partial-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FEF3C7;
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #78350F;
+}
+.partial-banner i { font-size: 14px; color: #D97706; flex-shrink: 0; }
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--rp-danger-light);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: #7F1D1D;
+}
+.error-banner i { font-size: 14px; color: var(--rp-danger); flex-shrink: 0; }
+
+.bottom-nav {
+  background: var(--rp-surface);
+  border-top: 0.5px solid var(--rp-border);
+  padding: 8px 0 20px;
+  display: flex;
+  justify-content: space-around;
+}
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  padding: 6px 0;
+  cursor: pointer;
+  position: relative;
+}
+.nav-tab i { font-size: 24px; color: var(--rp-text-muted); }
+.nav-tab span {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--rp-text-muted);
+}
+.nav-tab.active i { color: var(--rp-primary); }
+.nav-tab.active span { color: var(--rp-primary); font-weight: 600; }
+.badge-dot {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 16px);
+  width: 8px; height: 8px;
+  border-radius: 9999px;
+  background: var(--rp-danger);
+  border: 1.5px solid var(--rp-surface);
+}
+</style>
+
+<h2 class="sr-only">Pantalla de historial de lotes de ReparaPRO — lista de ejecuciones con alcance, resultados, errores y puntos de continuación</h2>
+
+<div class="phone">
+
+  <div class="status-bar">
+    <span class="time">09:41</span>
+    <div class="icons">
+      <i class="ti ti-wifi" aria-hidden="true"></i>
+      <i class="ti ti-battery-2" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="nav-header">
+    <div class="nav-back">
+      <i class="ti ti-chevron-left" style="font-size:22px" aria-hidden="true"></i>
+    </div>
+    <h1>Historial de lotes</h1>
+    <div class="nav-action">
+      <i class="ti ti-adjustments-horizontal" style="font-size:20px" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-pill active">Todos</button>
+    <button class="filter-pill">Con errores</button>
+    <button class="filter-pill">Interrumpidos</button>
+  </div>
+
+  <div class="scroll-area">
+
+    <!-- Lote 1: Completado hoy -->
+    <div class="batch-card">
+      <div class="batch-header">
+        <div>
+          <div class="batch-id-row">
+            <i class="ti ti-layers" style="font-size:16px;color:#475569" aria-hidden="true"></i>
+            <span class="batch-id">LOTE-0721</span>
+          </div>
+          <div class="batch-time">23 jul 2026 · 08:05 · 18 min</div>
+        </div>
+        <div class="status-chip chip-completado">
+          <span class="dot"></span>
+          COMPLETADO
+        </div>
+      </div>
+
+      <div class="batch-scope">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span>14 correos</span>
+        <span class="scope-sep">·</span>
+        <span>bandeja de entrada</span>
+        <span class="scope-sep">·</span>
+        <span style="font-family:var(--rp-mono);font-size:12px">23 jul 2026</span>
+      </div>
+
+      <div class="results-grid">
+        <span class="result-pill rp-procesada"><span class="count">9</span> PROCESADA</span>
+        <span class="result-pill rp-revision"><span class="count">2</span> REVISIÓN MANUAL</span>
+        <span class="result-pill rp-duplicado"><span class="count">1</span> DUPLICADO IGNORADO</span>
+        <span class="result-pill rp-nofactura"><span class="count">2</span> NO ES FACTURA</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="batch-footer">
+        <div class="footer-row">
+          <i class="ti ti-circle-check" style="color:#16A34A" aria-hidden="true"></i>
+          <span class="footer-label">Errores</span>
+          <span class="footer-value">Ninguno</span>
+        </div>
+        <div class="footer-row">
+          <i class="ti ti-flag" style="color:#94A3B8" aria-hidden="true"></i>
+          <span class="footer-label">Continuación</span>
+          <span class="footer-value">Lote completado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lote 2: Con errores -->
+    <div class="batch-card">
+      <div class="batch-header">
+        <div>
+          <div class="batch-id-row">
+            <i class="ti ti-layers" style="font-size:16px;color:#475569" aria-hidden="true"></i>
+            <span class="batch-id">LOTE-0720</span>
+          </div>
+          <div class="batch-time">22 jul 2026 · 16:47 · 11 min</div>
+        </div>
+        <div class="status-chip chip-errores">
+          <span class="dot"></span>
+          CON ERRORES
+        </div>
+      </div>
+
+      <div class="batch-scope">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span>8 correos</span>
+        <span class="scope-sep">·</span>
+        <span>bandeja de entrada</span>
+        <span class="scope-sep">·</span>
+        <span style="font-family:var(--rp-mono);font-size:12px">22 jul 2026</span>
+      </div>
+
+      <div class="results-grid">
+        <span class="result-pill rp-procesada"><span class="count">5</span> PROCESADA</span>
+        <span class="result-pill rp-revision"><span class="count">1</span> REVISIÓN MANUAL</span>
+        <span class="result-pill rp-nofactura"><span class="count">1</span> NO ES FACTURA</span>
+      </div>
+
+      <div class="error-banner">
+        <i class="ti ti-alert-circle" aria-hidden="true"></i>
+        <span>No se pudo acceder al adjunto del correo #3. Queda pendiente de revisión.</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="batch-footer">
+        <div class="footer-row">
+          <i class="ti ti-alert-circle" style="color:#DC2626" aria-hidden="true"></i>
+          <span class="footer-label">Errores</span>
+          <span class="footer-value error-text">1 error · correo #3</span>
+        </div>
+        <div class="footer-row">
+          <i class="ti ti-flag" style="color:#94A3B8" aria-hidden="true"></i>
+          <span class="footer-label">Continuación</span>
+          <span class="footer-value">Lote completado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lote 3: Interrumpido -->
+    <div class="batch-card">
+      <div class="batch-header">
+        <div>
+          <div class="batch-id-row">
+            <i class="ti ti-layers" style="font-size:16px;color:#475569" aria-hidden="true"></i>
+            <span class="batch-id">LOTE-0719</span>
+          </div>
+          <div class="batch-time">21 jul 2026 · 09:12 · interrumpido</div>
+        </div>
+        <div class="status-chip chip-interrumpido">
+          <span class="dot"></span>
+          INTERRUMPIDO
+        </div>
+      </div>
+
+      <div class="batch-scope">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span>22 correos</span>
+        <span class="scope-sep">·</span>
+        <span>bandeja de entrada</span>
+        <span class="scope-sep">·</span>
+        <span style="font-family:var(--rp-mono);font-size:12px">19–21 jul 2026</span>
+      </div>
+
+      <div class="partial-banner">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>Procesados 14 de 22 correos. Los 8 restantes están pendientes.</span>
+      </div>
+
+      <div class="results-grid">
+        <span class="result-pill rp-procesada"><span class="count">11</span> PROCESADA</span>
+        <span class="result-pill rp-revision"><span class="count">3</span> REVISIÓN MANUAL</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="batch-footer">
+        <div class="footer-row">
+          <i class="ti ti-circle-check" style="color:#16A34A" aria-hidden="true"></i>
+          <span class="footer-label">Errores</span>
+          <span class="footer-value">Ninguno</span>
+        </div>
+        <div class="footer-row">
+          <i class="ti ti-player-play" style="color:#0284C7" aria-hidden="true"></i>
+          <span class="footer-label">Continuación</span>
+          <span class="footer-value continuation-text">correo #15 · 21 jul 09:43</span>
+        </div>
+      </div>
+
+      <button class="btn-continuar">
+        <i class="ti ti-player-play" aria-hidden="true"></i>
+        Continuar lote
+      </button>
+    </div>
+
+    <!-- Lote 4: Completado, más antiguo -->
+    <div class="batch-card">
+      <div class="batch-header">
+        <div>
+          <div class="batch-id-row">
+            <i class="ti ti-layers" style="font-size:16px;color:#475569" aria-hidden="true"></i>
+            <span class="batch-id">LOTE-0718</span>
+          </div>
+          <div class="batch-time">18 jul 2026 · 11:30 · 24 min</div>
+        </div>
+        <div class="status-chip chip-completado">
+          <span class="dot"></span>
+          COMPLETADO
+        </div>
+      </div>
+
+      <div class="batch-scope">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span>19 correos</span>
+        <span class="scope-sep">·</span>
+        <span>bandeja de entrada</span>
+        <span class="scope-sep">·</span>
+        <span style="font-family:var(--rp-mono);font-size:12px">16–18 jul 2026</span>
+      </div>
+
+      <div class="results-grid">
+        <span class="result-pill rp-procesada"><span class="count">12</span> PROCESADA</span>
+        <span class="result-pill rp-revision"><span class="count">3</span> REVISIÓN MANUAL</span>
+        <span class="result-pill rp-venta"><span class="count">1</span> FACTURA DE VENTA</span>
+        <span class="result-pill rp-nofactura"><span class="count">3</span> NO ES FACTURA</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="batch-footer">
+        <div class="footer-row">
+          <i class="ti ti-circle-check" style="color:#16A34A" aria-hidden="true"></i>
+          <span class="footer-label">Errores</span>
+          <span class="footer-value">Ninguno</span>
+        </div>
+        <div class="footer-row">
+          <i class="ti ti-flag" style="color:#94A3B8" aria-hidden="true"></i>
+          <span class="footer-label">Continuación</span>
+          <span class="footer-value">Lote completado</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-tab">
+      <div style="position:relative;display:inline-block">
+        <i class="ti ti-file-text" aria-hidden="true"></i>
+        <span class="badge-dot" aria-label="Revisiones pendientes"></span>
+      </div>
+      <span>Facturas</span>
+    </div>
+    <div class="nav-tab">
+      <i class="ti ti-building" aria-hidden="true"></i>
+      <span>Proveedores</span>
+    </div>
+    <div class="nav-tab">
+      <i class="ti ti-arrows-diff" aria-hidden="true"></i>
+      <span>Conciliación</span>
+    </div>
+    <div class="nav-tab active">
+      <i class="ti ti-layers" aria-hidden="true"></i>
+      <span>Actividad</span>
+    </div>
+  </div>
+
+</div>
