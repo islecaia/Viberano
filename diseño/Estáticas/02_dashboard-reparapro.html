@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReparaPRO — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.383.0/umd/lucide.min.js"></script>
+<style>
+  /* ── DESIGN TOKENS ─────────────────────────────────────── */
+  :root {
+    /* Base */
+    --color-bg:             #F8FAFC;
+    --color-surface:        #FFFFFF;
+    --color-surface-raised: #F1F5F9;
+    --color-border:         #E2E8F0;
+    --color-border-strong:  #CBD5E1;
+
+    /* Texto */
+    --color-text-primary:   #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted:     #94A3B8;
+    --color-text-inverse:   #FFFFFF;
+
+    /* Primario */
+    --color-primary:        #1E40AF;
+    --color-primary-light:  #DBEAFE;
+    --color-primary-dark:   #1E3A8A;
+
+    /* Semánticos */
+    --color-success:        #16A34A;
+    --color-warning:        #D97706;
+    --color-danger:         #DC2626;
+    --color-danger-light:   #FEE2E2;
+    --color-info:           #0284C7;
+
+    /* Estados de factura */
+    --procesada-bg:         #DCFCE7;
+    --procesada-text:       #14532D;
+    --procesada-accent:     #16A34A;
+
+    --revision-bg:          #FEF3C7;
+    --revision-text:        #78350F;
+    --revision-accent:      #D97706;
+
+    --duplicado-bg:         #F3E8FF;
+    --duplicado-text:       #4C1D95;
+    --duplicado-accent:     #7C3AED;
+
+    --nofactura-bg:         #F1F5F9;
+    --nofactura-text:       #334155;
+    --nofactura-accent:     #64748B;
+
+    --venta-bg:             #E0F2FE;
+    --venta-text:           #0C4A6E;
+    --venta-accent:         #0284C7;
+
+    /* Espaciado */
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3:  12px;
+    --space-4:  16px;
+    --space-5:  20px;
+    --space-6:  24px;
+    --space-8:  32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* Radio */
+    --radius-xs:   4px;
+    --radius-sm:   6px;
+    --radius-md:   8px;
+    --radius-lg:   12px;
+    --radius-xl:   16px;
+    --radius-full: 9999px;
+
+    /* Sombras */
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
+    --shadow-md: 0 4px 12px rgba(15,23,42,0.10);
+  }
+
+  /* ── RESET ─────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E2E8F0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 32px 16px 48px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* ── PHONE FRAME ────────────────────────────────────────── */
+  .phone-frame {
+    width: 390px;
+    min-height: 844px;
+    background: var(--color-bg);
+    border-radius: 44px;
+    box-shadow:
+      0 0 0 8px #1C1C1E,
+      0 0 0 10px #3A3A3C,
+      0 32px 64px rgba(15,23,42,0.30);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── STATUS BAR ─────────────────────────────────────────── */
+  .status-bar {
+    background: var(--color-surface);
+    padding: 14px var(--space-6) 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    letter-spacing: -0.3px;
+  }
+  .status-bar .icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .status-bar .icons svg {
+    color: var(--color-text-primary);
+  }
+
+  /* ── APP HEADER ─────────────────────────────────────────── */
+  .app-header {
+    background: var(--color-surface);
+    padding: 6px var(--space-4) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .app-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .app-header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    letter-spacing: -0.4px;
+  }
+  .app-header-subtitle {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+  .app-header-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    letter-spacing: -0.2px;
+    flex-shrink: 0;
+  }
+
+  /* ── SCROLL AREA ────────────────────────────────────────── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-5) var(--space-4);
+    padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* ── SECTION LABEL ──────────────────────────────────────── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  /* ── KPI ROW ────────────────────────────────────────────── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  .kpi-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .kpi-card.full {
+    grid-column: 1 / -1;
+  }
+  .kpi-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .kpi-card-icon.warning  { background: #FEF3C7; color: #D97706; }
+  .kpi-card-icon.success  { background: #DCFCE7; color: #16A34A; }
+  .kpi-card-icon.primary  { background: var(--color-primary-light); color: var(--color-primary); }
+  .kpi-card-icon.muted    { background: var(--color-surface-raised); color: var(--color-text-secondary); }
+
+  .kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .kpi-value.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+  }
+  .kpi-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    line-height: 1.3;
+  }
+
+  /* ── ÚLTIMO LOTE ────────────────────────────────────────── */
+  .lote-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .lote-header {
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .lote-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .lote-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+  .lote-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .lote-meta {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+  }
+  .lote-date {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .lote-stats {
+    padding: var(--space-4);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+  .lote-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .lote-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+  .lote-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+  }
+  .lote-stat-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+  .chip-procesada    { background: var(--procesada-bg);  color: var(--procesada-text); }
+  .chip-procesada .lote-stat-dot  { background: var(--procesada-accent); }
+  .chip-revision     { background: var(--revision-bg);   color: var(--revision-text); }
+  .chip-revision .lote-stat-dot   { background: var(--revision-accent); }
+  .chip-duplicado    { background: var(--duplicado-bg);  color: var(--duplicado-text); }
+  .chip-duplicado .lote-stat-dot  { background: var(--duplicado-accent); }
+  .chip-nofactura    { background: var(--nofactura-bg);  color: var(--nofactura-text); }
+  .chip-nofactura .lote-stat-dot  { background: var(--nofactura-accent); }
+
+  .lote-footer {
+    padding: 10px var(--space-4) var(--space-3);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lote-total-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .lote-total-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .btn-ghost {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ── ALERTAS ────────────────────────────────────────────── */
+  .alertas-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .alerta-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    min-height: var(--space-12);
+  }
+  .alerta-item.danger {
+    border-left: 3px solid var(--color-danger);
+    background: #FFFBFB;
+  }
+  .alerta-item.warning {
+    border-left: 3px solid var(--color-warning);
+    background: #FFFDF5;
+  }
+  .alerta-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alerta-icon.danger  { color: var(--color-danger); }
+  .alerta-icon.warning { color: var(--color-warning); }
+  .alerta-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .alerta-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+  }
+  .alerta-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+  .alerta-badge {
+    flex-shrink: 0;
+    min-width: 22px;
+    height: 22px;
+    border-radius: var(--radius-full);
+    background: var(--color-danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  .alerta-badge.warning {
+    background: var(--color-warning);
+  }
+
+  /* ── ACCESOS RÁPIDOS ────────────────────────────────────── */
+  .shortcuts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  .shortcut-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    cursor: pointer;
+    min-height: 88px;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .shortcut-card:active { background: var(--color-surface-raised); }
+  .shortcut-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+  .shortcut-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+  }
+  .shortcut-count {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    min-width: 20px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    background: var(--color-danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+  }
+  .shortcut-sub {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    margin-top: -var(--space-1);
+  }
+
+  /* ── BARRA DE NAVEGACIÓN ────────────────────────────────── */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    padding: 10px 0 28px;
+    box-shadow: 0 -1px 0 var(--color-border);
+  }
+  .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
+    cursor: pointer;
+    min-height: 44px;
+    justify-content: center;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-tab-icon {
+    position: relative;
+  }
+  .nav-tab svg {
+    display: block;
+  }
+  .nav-tab-label {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.1px;
+  }
+  .nav-tab.active .nav-tab-label {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+  .nav-tab.active svg {
+    color: var(--color-primary);
+  }
+  .nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    background: var(--color-danger);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+  }
+
+  /* ── DIVIDER ────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  /* ── PENDING BANNER ─────────────────────────────────────── */
+  .pending-banner {
+    background: var(--color-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    box-shadow: 0 4px 12px rgba(30,64,175,0.25);
+  }
+  .pending-banner-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+  }
+  .pending-banner-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+  .pending-banner-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .pending-banner-count {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .pending-banner-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+  }
+  .pending-banner-btn {
+    background: white;
+    color: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 44px;
+    font-family: 'Inter', system-ui, sans-serif;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity="0.3"/>
+        <rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity="0.5"/>
+        <rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor" opacity="0.75"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+        <path d="M8 2.4C10.4 2.4 12.56 3.44 14.08 5.12L15.2 3.84C13.36 1.84 10.8 0.64 8 0.64C5.2 0.64 2.64 1.84 0.8 3.84L1.92 5.12C3.44 3.44 5.6 2.4 8 2.4Z" opacity="0.3"/>
+        <path d="M8 5.6C9.6 5.6 11.04 6.24 12.08 7.28L13.2 6C11.84 4.72 10 3.92 8 3.92C6 3.92 4.16 4.72 2.8 6L3.92 7.28C4.96 6.24 6.4 5.6 8 5.6Z" opacity="0.6"/>
+        <path d="M8 8.8C8.88 8.8 9.68 9.12 10.32 9.68L11.44 8.4C10.48 7.52 9.28 7.04 8 7.04C6.72 7.04 5.52 7.52 4.56 8.4L5.68 9.68C6.32 9.12 7.12 8.8 8 8.8Z" opacity="0.9"/>
+        <circle cx="8" cy="11.36" r="0.96"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/>
+        <path d="M23 4v4a2 2 0 0 0 0-4Z" fill="currentColor" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- APP HEADER -->
+  <div class="app-header">
+    <div class="app-header-left">
+      <span class="app-header-title">Inicio</span>
+      <span class="app-header-subtitle">Jueves, 24 de julio de 2025</span>
+    </div>
+    <div class="app-header-avatar">MA</div>
+  </div>
+
+  <!-- SCROLL CONTENT -->
+  <div class="scroll-area">
+
+    <!-- BANNER: PENDIENTES DE REVISIÓN -->
+    <div>
+      <div class="section-label">Requieren atención</div>
+      <div class="pending-banner">
+        <div class="pending-banner-left">
+          <div class="pending-banner-icon">
+            <i data-lucide="alert-circle" style="width:22px;height:22px;"></i>
+          </div>
+          <div class="pending-banner-text">
+            <div class="pending-banner-count">12</div>
+            <div class="pending-banner-label">facturas en REVISIÓN MANUAL</div>
+          </div>
+        </div>
+        <button class="pending-banner-btn">Revisar</button>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div>
+      <div class="section-label">Hoy</div>
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card-icon success">
+            <i data-lucide="check-circle" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="kpi-value">47</div>
+          <div class="kpi-label">Procesadas hoy</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-icon muted">
+            <i data-lucide="copy" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="kpi-value">3</div>
+          <div class="kpi-label">Duplicados ignorados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMO LOTE -->
+    <div>
+      <div class="section-label">Último lote procesado</div>
+      <div class="lote-card">
+        <div class="lote-header">
+          <div class="lote-header-left">
+            <div class="lote-icon">
+              <i data-lucide="layers" style="width:18px;height:18px;"></i>
+            </div>
+            <div>
+              <div class="lote-title">Lote julio 2025</div>
+              <div class="lote-meta">LOTE-2025-07-24</div>
+            </div>
+          </div>
+          <span class="lote-date">hace 38 min</span>
+        </div>
+        <div class="lote-stats">
+          <div class="lote-stat">
+            <div class="lote-stat-value">47</div>
+            <div class="lote-stat-chip chip-procesada">
+              <span class="lote-stat-dot"></span>PROCESADA
+            </div>
+          </div>
+          <div class="lote-stat">
+            <div class="lote-stat-value">12</div>
+            <div class="lote-stat-chip chip-revision">
+              <span class="lote-stat-dot"></span>REVISIÓN
+            </div>
+          </div>
+          <div class="lote-stat">
+            <div class="lote-stat-value">3</div>
+            <div class="lote-stat-chip chip-duplicado">
+              <span class="lote-stat-dot"></span>DUPLICADO
+            </div>
+          </div>
+        </div>
+        <div class="lote-footer">
+          <div>
+            <div class="lote-total-label">Importe total archivado</div>
+            <div class="lote-total-value">14.820,50 €</div>
+          </div>
+          <button class="btn-ghost">
+            Ver actividad <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS ACTIVAS -->
+    <div>
+      <div class="section-label">Alertas activas</div>
+      <div class="alertas-list">
+
+        <div class="alerta-item danger">
+          <div class="alerta-icon danger">
+            <i data-lucide="triangle-alert" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="alerta-content">
+            <div class="alerta-title">Proveedor no encontrado en el catálogo.</div>
+            <div class="alerta-meta">3 facturas pendientes · Lote 2025-07-24</div>
+          </div>
+          <div class="alerta-badge">3</div>
+        </div>
+
+        <div class="alerta-item warning">
+          <div class="alerta-icon warning">
+            <i data-lucide="triangle-alert" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="alerta-content">
+            <div class="alerta-title">Número de factura ausente o ambiguo.</div>
+            <div class="alerta-meta">5 facturas pendientes · Lote 2025-07-24</div>
+          </div>
+          <div class="alerta-badge warning">5</div>
+        </div>
+
+        <div class="alerta-item warning">
+          <div class="alerta-icon warning">
+            <i data-lucide="triangle-alert" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="alerta-content">
+            <div class="alerta-title">Total no identificado o igual a cero.</div>
+            <div class="alerta-meta">4 facturas pendientes · Lote 2025-07-24</div>
+          </div>
+          <div class="alerta-badge warning">4</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ACCESOS DIRECTOS -->
+    <div>
+      <div class="section-label">Secciones</div>
+      <div class="shortcuts-grid">
+
+        <div class="shortcut-card">
+          <div class="shortcut-count">12</div>
+          <div class="shortcut-icon">
+            <i data-lucide="file-text" style="width:20px;height:20px;"></i>
+          </div>
+          <div>
+            <div class="shortcut-label">Facturas</div>
+            <div class="shortcut-sub">12 en revisión</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card">
+          <div class="shortcut-icon">
+            <i data-lucide="building-2" style="width:20px;height:20px;"></i>
+          </div>
+          <div>
+            <div class="shortcut-label">Proveedores</div>
+            <div class="shortcut-sub">38 activos</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card">
+          <div class="shortcut-icon">
+            <i data-lucide="git-compare" style="width:20px;height:20px;"></i>
+          </div>
+          <div>
+            <div class="shortcut-label">Conciliación</div>
+            <div class="shortcut-sub">Julio 2025</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card">
+          <div class="shortcut-icon">
+            <i data-lucide="layers" style="width:20px;height:20px;"></i>
+          </div>
+          <div>
+            <div class="shortcut-label">Actividad</div>
+            <div class="shortcut-sub">62 eventos hoy</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /scroll-area -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-tab active">
+      <div class="nav-tab-icon">
+        <i data-lucide="file-text" style="width:24px;height:24px;color:var(--color-primary);"></i>
+        <div class="nav-badge">12</div>
+      </div>
+      <span class="nav-tab-label">Facturas</span>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">
+        <i data-lucide="building-2" style="width:24px;height:24px;color:var(--color-text-muted);"></i>
+      </div>
+      <span class="nav-tab-label">Proveedores</span>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">
+        <i data-lucide="git-compare" style="width:24px;height:24px;color:var(--color-text-muted);"></i>
+      </div>
+      <span class="nav-tab-label">Conciliación</span>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">
+        <i data-lucide="layers" style="width:24px;height:24px;color:var(--color-text-muted);"></i>
+      </div>
+      <span class="nav-tab-label">Actividad</span>
+    </div>
+  </div>
+
+</div><!-- /phone-frame -->
+
+<script>
+  lucide.createIcons();
+</script>
+</body>
+</html>
