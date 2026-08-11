@@ -104,14 +104,18 @@ def _process_message(account: MailboxAccount, sync_run: SyncRun, connector, mess
             formato=formato,
         )
         texto_extraido = classification.extract_text(content, formato)
-        estado, motivo = classification.classify(message.remitente, message.asunto, texto_extraido)
+        resultado = classification.classify(message.remitente, message.asunto, texto_extraido)
 
         candidate_document_model.create(
             correo_id=ingested.id,
             archivo_adjunto_ref=archivo_ref,
             nombre_archivo_original=attachment.filename,
             formato=formato,
-            estado=estado,
-            motivo_clasificacion=motivo,
+            estado=resultado.estado,
+            motivo_clasificacion=resultado.motivo,
+            sugerido_proveedor_nombre=resultado.sugerido_proveedor_nombre,
+            sugerido_fecha_factura=resultado.sugerido_fecha_factura,
+            sugerido_numero_factura=resultado.sugerido_numero_factura,
+            sugerido_total=resultado.sugerido_total,
         )
         sync_run_model.increment_counters(sync_run.id, candidatos_generados=1)

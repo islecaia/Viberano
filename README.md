@@ -3,8 +3,17 @@
 Herramienta web para identificar, validar y archivar facturas de gasto recibidas por email, con
 revisión humana obligatoria antes de cualquier escritura masiva. Ver
 [.specify/memory/constitution.md](.specify/memory/constitution.md) para los principios del
-proyecto y [specs/001-ingesta-facturas-email/](specs/001-ingesta-facturas-email/) para la
-especificación, plan y tareas de la primera feature (ingesta y detección de facturas por email).
+proyecto. Features implementadas hasta ahora:
+
+- [specs/001-ingesta-facturas-email/](specs/001-ingesta-facturas-email/) — conectar una cuenta
+  de correo, sincronizar y detectar documentos candidatos a factura de gasto.
+- [specs/002-validacion-archivado-facturas/](specs/002-validacion-archivado-facturas/) —
+  validar un documento candidato (proveedor activo, fecha, número, total) y confirmar su
+  archivado a PROCESADA, gestionar el catálogo de proveedores, y reclasificar documentos mal
+  clasificados automáticamente.
+- [specs/003-sugerencia-datos-factura/](specs/003-sugerencia-datos-factura/) — precargar el
+  formulario de validación con proveedor/fecha/número/total propuestos a partir del propio
+  documento, siempre editables y sujetos a la misma confirmación humana explícita.
 
 ## Requisitos
 
@@ -40,6 +49,13 @@ uv run pytest
 uv run ruff check app
 ```
 
+## Esquema de base de datos
+
+El esquema vive en `app/db/migrations/*.sql`, aplicadas en orden por `init_db()` (ver
+`specs/002-validacion-archivado-facturas/research.md` §1). Para añadir un cambio de esquema,
+crea un nuevo archivo `NNNN_descripcion.sql` — nunca edites una migración ya aplicada.
+
 ## Estructura
 
-Ver `specs/001-ingesta-facturas-email/plan.md` § Project Structure para el detalle de `app/`.
+Ver `specs/001-ingesta-facturas-email/plan.md` y `specs/002-validacion-archivado-facturas/plan.md`
+§ Project Structure para el detalle de `app/`.

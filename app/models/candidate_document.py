@@ -1,15 +1,35 @@
-"""Modelo DocumentoCandidato (data-model.md § DocumentoCandidato).
+"""Modelo DocumentoCandidato (data-model.md § DocumentoCandidato de las features 001 y 002).
 
-`estado` nunca puede ser PROCESADA en esta feature (FR-007, FR-011, Principio II) — esa
-transición pertenece a la futura feature de validación y archivado.
+`estado` solo puede llegar a PROCESADA a través de `mark_procesada()` (FR-002 a FR-004,
+Principio II) — nunca al crearse (`create()`, usado por la ingesta). PROCESADA, NO ES FACTURA,
+FACTURA DE VENTA y DUPLICADO IGNORADO son estados finales dentro de esta feature (FR-011):
+`mark_procesada()` y `reclassify()` exigen que el documento siga en REVISIÓN MANUAL.
 """
 
+import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.db.session import get_connection
 
 ESTADOS_VALIDOS = {"REVISIÓN MANUAL", "NO ES FACTURA", "FACTURA DE VENTA", "DUPLICADO IGNORADO"}
+ESTADO_REVISION_MANUAL = "REVISIÓN MANUAL"
+ESTADOS_RECLASIFICABLES = {"NO ES FACTURA", "FACTURA DE VENTA"}
+
+
+class DocumentoNoEnRevisionError(Exception):
+    """El documento ya no está en REVISIÓN MANUAL (ya resuelto, o condición de carrera)."""
+
+
+class ArchivadoDuplicadoError(Exception):
+    """Ya existe otro documento PROCESADA con el mismo proveedor + fecha + número (FR-009)."""
+
+    def __init__(self, documento_id: int | None = None):
+        self.documento_id = documento_id
+        detalle = f" (documento {documento_id})" if documento_id else ""
+        super().__init__(
+            f"Ya existe otro documento PROCESADA con el mismo proveedor, fecha y número{detalle}"
+        )
 
 
 @dataclass(frozen=True)
@@ -22,6 +42,17 @@ class CandidateDocument:
     estado: str
     motivo_clasificacion: str
     fecha_creacion: str
+    proveedor_id: int | None
+    fecha_factura: str | None
+    numero_factura: str | None
+    total: float | None
+    es_nota_credito: bool
+    validado_por: str | None
+    fecha_validacion: str | None
+    sugerido_proveedor_nombre: str | None
+    sugerido_fecha_factura: str | None
+    sugerido_numero_factura: str | None
+    sugerido_total: float | None
 
     @classmethod
     def _from_row(cls, row) -> "CandidateDocument":
@@ -34,6 +65,17 @@ class CandidateDocument:
             estado=row["estado"],
             motivo_clasificacion=row["motivo_clasificacion"],
             fecha_creacion=row["fecha_creacion"],
+            proveedor_id=row["proveedor_id"],
+            fecha_factura=row["fecha_factura"],
+            numero_factura=row["numero_factura"],
+            total=row["total"],
+            es_nota_credito=bool(row["es_nota_credito"]),
+            validado_por=row["validado_por"],
+            fecha_validacion=row["fecha_validacion"],
+            sugerido_proveedor_nombre=row["sugerido_proveedor_nombre"],
+            sugerido_fecha_factura=row["sugerido_fecha_factura"],
+            sugerido_numero_factura=row["sugerido_numero_factura"],
+            sugerido_total=row["sugerido_total"],
         )
 
 
@@ -44,7 +86,13 @@ def create(
     formato: str,
     estado: str,
     motivo_clasificacion: str,
+    sugerido_proveedor_nombre: str | None = None,
+    sugerido_fecha_factura: str | None = None,
+    sugerido_numero_factura: str | None = None,
+    sugerido_total: float | None = None,
 ) -> CandidateDocument:
+    """Las sugerencias (specs/003-sugerencia-datos-factura/) se guardan una única vez al crear el
+    documento; no cambian después (research.md §2 de esa feature)."""
     if estado not in ESTADOS_VALIDOS:
         raise ValueError(f"Estado no permitido en esta feature: {estado}")
     conn = get_connection()
@@ -53,8 +101,9 @@ def create(
         """
         INSERT INTO candidate_documents
             (correo_id, archivo_adjunto_ref, nombre_archivo_original, formato, estado,
-             motivo_clasificacion, fecha_creacion)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+             motivo_clasificacion, fecha_creacion, sugerido_proveedor_nombre,
+             sugerido_fecha_factura, sugerido_numero_factura, sugerido_total)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             correo_id,
@@ -64,6 +113,10 @@ def create(
             estado,
             motivo_clasificacion,
             fecha_creacion,
+            sugerido_proveedor_nombre,
+            sugerido_fecha_factura,
+            sugerido_numero_factura,
+            sugerido_total,
         ),
     )
     conn.commit()
@@ -144,3 +197,89 @@ def get_with_email(candidate_id: int) -> CandidateDocumentWithEmail | None:
     conn = get_connection()
     row = conn.execute(_JOIN_EMAIL_SQL + " WHERE cd.id = ?", (candidate_id,)).fetchone()
     return CandidateDocumentWithEmail._from_row(row) if row else None
+
+
+def find_procesada_duplicado(
+    proveedor_id: int, fecha_factura: str, numero_factura: str
+) -> CandidateDocument | None:
+    """Comprobación previa (para dar un mensaje con el id en conflicto, contracts/api.md);
+    la garantía real contra condiciones de carrera la da el índice único (FR-009)."""
+    conn = get_connection()
+    row = conn.execute(
+        """
+        SELECT * FROM candidate_documents
+        WHERE estado = 'PROCESADA' AND proveedor_id = ? AND fecha_factura = ?
+              AND numero_factura = ?
+        """,
+        (proveedor_id, fecha_factura, numero_factura),
+    ).fetchone()
+    return CandidateDocument._from_row(row) if row else None
+
+
+def mark_procesada(
+    candidate_id: int,
+    proveedor_id: int,
+    fecha_factura: str,
+    numero_factura: str,
+    total: float,
+    es_nota_credito: bool,
+    validado_por: str,
+) -> CandidateDocument:
+    """FR-002 a FR-004, FR-008: transiciona a PROCESADA solo si sigue en REVISIÓN MANUAL.
+
+    Lanza DocumentoNoEnRevisionError si ya no está en REVISIÓN MANUAL (resuelto por otra persona
+    o condición de carrera, FR-011) o ArchivadoDuplicadoError si viola el índice único de
+    data-model.md (FR-009).
+    """
+    conn = get_connection()
+    fecha_validacion = datetime.now(UTC).isoformat()
+    try:
+        cursor = conn.execute(
+            """
+            UPDATE candidate_documents
+            SET estado = 'PROCESADA', proveedor_id = ?, fecha_factura = ?, numero_factura = ?,
+                total = ?, es_nota_credito = ?, validado_por = ?, fecha_validacion = ?
+            WHERE id = ? AND estado = ?
+            """,
+            (
+                proveedor_id,
+                fecha_factura,
+                numero_factura,
+                total,
+                int(es_nota_credito),
+                validado_por,
+                fecha_validacion,
+                candidate_id,
+                ESTADO_REVISION_MANUAL,
+            ),
+        )
+    except sqlite3.IntegrityError as exc:
+        conn.rollback()
+        raise ArchivadoDuplicadoError() from exc
+
+    if cursor.rowcount == 0:
+        conn.rollback()
+        raise DocumentoNoEnRevisionError(
+            f"El documento {candidate_id} ya no está en {ESTADO_REVISION_MANUAL}"
+        )
+    conn.commit()
+    return get_by_id(candidate_id)
+
+
+def reclassify(candidate_id: int, estado: str) -> CandidateDocument:
+    """FR-007: reclasifica un documento en REVISIÓN MANUAL como NO ES FACTURA o FACTURA DE VENTA."""
+    if estado not in ESTADOS_RECLASIFICABLES:
+        raise ValueError(f"Estado no permitido para reclasificar: {estado}")
+
+    conn = get_connection()
+    cursor = conn.execute(
+        "UPDATE candidate_documents SET estado = ? WHERE id = ? AND estado = ?",
+        (estado, candidate_id, ESTADO_REVISION_MANUAL),
+    )
+    if cursor.rowcount == 0:
+        conn.rollback()
+        raise DocumentoNoEnRevisionError(
+            f"El documento {candidate_id} ya no está en {ESTADO_REVISION_MANUAL}"
+        )
+    conn.commit()
+    return get_by_id(candidate_id)

@@ -10,6 +10,7 @@ import io
 import json
 import logging
 import os
+from dataclasses import dataclass
 
 import anthropic
 from pypdf import PdfReader
@@ -64,16 +65,32 @@ def extract_text(content: bytes, formato: str) -> str:
         return ""
 
 
-def classify(remitente: str, asunto: str, texto_extraido: str) -> tuple[str, str]:
-    """Devuelve (estado, motivo). Estado es REVISIÓN MANUAL, NO ES FACTURA o FACTURA DE VENTA.
+@dataclass(frozen=True)
+class ClassificationResult:
+    estado: str
+    motivo: str
+    sugerido_proveedor_nombre: str | None = None
+    sugerido_fecha_factura: str | None = None
+    sugerido_numero_factura: str | None = None
+    sugerido_total: float | None = None
+
+
+def classify(remitente: str, asunto: str, texto_extraido: str) -> ClassificationResult:
+    """Clasifica el documento y, en la misma llamada, propone proveedor/fecha/número/total
+    (specs/003-sugerencia-datos-factura/research.md §1): nunca se añade una segunda llamada a la
+    Anthropic API para generar las sugerencias (Principio VII).
 
     Nunca devuelve un estado "positivo" (candidato a gasto) certero: eso lo decide una persona en
     REVISIÓN MANUAL (Principio I y II) — esta función solo distingue lo que puede descartar con
-    confianza (no es factura / es factura de venta) de lo que debe revisar un humano.
+    confianza (no es factura / es factura de venta) de lo que debe revisar un humano. Del mismo
+    modo, un campo sugerido sin confianza suficiente se omite (None) en vez de inventarse
+    (Principio I, FR-003 de la feature de sugerencia).
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        return REVISION_MANUAL, "Sin ANTHROPIC_API_KEY configurada; requiere revisión manual"
+        return ClassificationResult(
+            REVISION_MANUAL, "Sin ANTHROPIC_API_KEY configurada; requiere revisión manual"
+        )
 
     client = anthropic.Anthropic(api_key=api_key, timeout=_CLASSIFICATION_TIMEOUT_SECONDS)
     model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
@@ -87,15 +104,24 @@ def classify(remitente: str, asunto: str, texto_extraido: str) -> tuple[str, str
         f"- {FACTURA_DE_VENTA}: es una factura emitida por el propio usuario, "
         "no un gasto recibido.\n"
         "Ante cualquier duda, responde REVISIÓN MANUAL.\n\n"
+        "Además, si el texto lo permite, identifica estos cuatro datos de la posible factura, "
+        "cada uno con su propia confianza (0.0-1.0): proveedor (nombre), fecha_factura "
+        "(formato YYYY-MM-DD), numero_factura y total (número). Si no puedes identificar un "
+        "campo con confianza, omítelo (null) en vez de adivinarlo.\n\n"
         f"Remitente: {remitente}\nAsunto: {asunto}\n"
         f"Texto extraído del adjunto:\n{texto_extraido}\n\n"
-        'Responde solo JSON: {"estado": "...", "confianza": 0.0-1.0, "motivo": "..."}'
+        "Responde solo JSON con esta forma exacta:\n"
+        '{"estado": "...", "confianza": 0.0-1.0, "motivo": "...", '
+        '"proveedor": {"valor": "..." o null, "confianza": 0.0-1.0}, '
+        '"fecha_factura": {"valor": "..." o null, "confianza": 0.0-1.0}, '
+        '"numero_factura": {"valor": "..." o null, "confianza": 0.0-1.0}, '
+        '"total": {"valor": ... o null, "confianza": 0.0-1.0}}'
     )
 
     try:
         response = client.messages.create(
             model=model,
-            max_tokens=300,
+            max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
         raw_text = "".join(
@@ -107,9 +133,42 @@ def classify(remitente: str, asunto: str, texto_extraido: str) -> tuple[str, str
         motivo = data.get("motivo", "")
     except Exception as exc:  # noqa: BLE001 - cualquier fallo cae a REVISIÓN MANUAL
         logger.warning("Fallo en clasificación con Anthropic API: %s", exc)
-        return REVISION_MANUAL, "Clasificación no concluyente: fallo o timeout en la llamada de IA"
+        return ClassificationResult(
+            REVISION_MANUAL, "Clasificación no concluyente: fallo o timeout en la llamada de IA"
+        )
 
     estados_validos = {REVISION_MANUAL, NO_ES_FACTURA, FACTURA_DE_VENTA}
     if estado not in estados_validos or confianza < _CONFIDENCE_THRESHOLD:
-        return REVISION_MANUAL, motivo or "Confianza de clasificación por debajo del umbral"
-    return estado, motivo or f"Clasificado como {estado}"
+        estado = REVISION_MANUAL
+        motivo = motivo or "Confianza de clasificación por debajo del umbral"
+    else:
+        motivo = motivo or f"Clasificado como {estado}"
+
+    sugerencias = {
+        "sugerido_proveedor_nombre": _campo_sugerido(data, "proveedor", str),
+        "sugerido_fecha_factura": _campo_sugerido(data, "fecha_factura", str),
+        "sugerido_numero_factura": _campo_sugerido(data, "numero_factura", str),
+        "sugerido_total": _campo_sugerido(data, "total", float),
+    }
+    return ClassificationResult(estado=estado, motivo=motivo, **sugerencias)
+
+
+def _campo_sugerido(data: dict, campo: str, tipo: type):
+    """Devuelve el valor de `data[campo]["valor"]` solo si su confianza supera el umbral
+    (Principio I, FR-003 de specs/003-sugerencia-datos-factura/); en cualquier otro caso, None."""
+    bloque = data.get(campo)
+    if not isinstance(bloque, dict):
+        return None
+    valor = bloque.get("valor")
+    if valor is None:
+        return None
+    try:
+        confianza = float(bloque.get("confianza", 0))
+    except (TypeError, ValueError):
+        return None
+    if confianza < _CONFIDENCE_THRESHOLD:
+        return None
+    try:
+        return tipo(valor)
+    except (TypeError, ValueError):
+        return None

@@ -1,11 +1,22 @@
-"""Endpoints de contracts/api.md para revisar documentos candidatos (User Story 3, FR-010)."""
+"""Endpoints de contracts/api.md para revisar documentos candidatos.
+
+Ampliado por specs/002-validacion-archivado-facturas/ con `POST .../validate` (User Story 1) y
+`POST .../reclassify` (User Story 3); las rutas originales son de la feature 001 (User Story 3
+allí, FR-010).
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 
 from app.auth.session import get_current_user
 from app.models import candidate_document as candidate_document_model
+from app.models import provider as provider_model
 from app.services import attachment_store
+from app.services.validation_service import (
+    CampoInvalidoError,
+    ProveedorInactivoError,
+    validate_and_archive,
+)
 
 router = APIRouter(prefix="/candidate-documents", tags=["candidate-documents"])
 
@@ -27,6 +38,19 @@ class CandidateListResponse(BaseModel):
     total: int
 
 
+class ProviderRef(BaseModel):
+    id: int
+    nombre: str
+
+
+class Sugerencia(BaseModel):
+    proveedor_nombre: str | None = None
+    proveedor_id_coincidente: int | None = None
+    fecha_factura: str | None = None
+    numero_factura: str | None = None
+    total: float | None = None
+
+
 class CandidateDetailResponse(BaseModel):
     id: int
     estado: str
@@ -35,6 +59,32 @@ class CandidateDetailResponse(BaseModel):
     asunto: str
     fecha_correo: str
     adjunto_url: str
+    proveedor: ProviderRef | None = None
+    fecha_factura: str | None = None
+    numero_factura: str | None = None
+    total: float | None = None
+    es_nota_credito: bool = False
+    validado_por: str | None = None
+    fecha_validacion: str | None = None
+    sugerencia: Sugerencia | None = None
+
+
+class ValidateRequest(BaseModel):
+    fecha_factura: str
+    numero_factura: str
+    total: float
+    es_nota_credito: bool = False
+    proveedor_id: int | None = None
+    proveedor_nombre_nuevo: str | None = None
+
+
+class ReclassifyRequest(BaseModel):
+    estado: str
+
+
+class ReclassifyResponse(BaseModel):
+    id: int
+    estado: str
 
 
 def _to_list_item(entry) -> CandidateListItem:
@@ -62,14 +112,40 @@ def list_candidates(
     return CandidateListResponse(items=items, total=len(items))
 
 
-@router.get("/{candidate_id}", response_model=CandidateDetailResponse)
-def get_candidate(
-    candidate_id: int, _persona_autorizada: str = Depends(get_current_user)
-) -> CandidateDetailResponse:
-    entry = candidate_document_model.get_with_email(candidate_id)
-    if entry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
+def _build_sugerencia(doc) -> Sugerencia | None:
+    """FR-008 de specs/003-sugerencia-datos-factura/: sin sugerencia fuera de REVISIÓN MANUAL."""
+    if doc.estado != candidate_document_model.ESTADO_REVISION_MANUAL:
+        return None
+    campos = (
+        doc.sugerido_proveedor_nombre,
+        doc.sugerido_fecha_factura,
+        doc.sugerido_numero_factura,
+        doc.sugerido_total,
+    )
+    if all(campo is None for campo in campos):
+        return None
+    proveedor_coincidente = None
+    if doc.sugerido_proveedor_nombre:
+        # research.md §6 de specs/003-sugerencia-datos-factura/: se resuelve en el momento de
+        # mostrar la pantalla, no se persiste — el catálogo puede haber cambiado desde entonces.
+        coincidencia = provider_model.get_by_nombre_normalizado(doc.sugerido_proveedor_nombre)
+        proveedor_coincidente = coincidencia.id if coincidencia else None
+    return Sugerencia(
+        proveedor_nombre=doc.sugerido_proveedor_nombre,
+        proveedor_id_coincidente=proveedor_coincidente,
+        fecha_factura=doc.sugerido_fecha_factura,
+        numero_factura=doc.sugerido_numero_factura,
+        total=doc.sugerido_total,
+    )
+
+
+def _to_detail_response(entry) -> CandidateDetailResponse:
     doc = entry.documento
+    proveedor_ref = None
+    if doc.proveedor_id is not None:
+        proveedor = provider_model.get_by_id(doc.proveedor_id)
+        if proveedor is not None:
+            proveedor_ref = ProviderRef(id=proveedor.id, nombre=proveedor.nombre)
     return CandidateDetailResponse(
         id=doc.id,
         estado=doc.estado,
@@ -78,7 +154,88 @@ def get_candidate(
         asunto=entry.correo_asunto,
         fecha_correo=entry.correo_fecha,
         adjunto_url=f"/api/candidate-documents/{doc.id}/attachment",
+        proveedor=proveedor_ref,
+        fecha_factura=doc.fecha_factura,
+        numero_factura=doc.numero_factura,
+        total=doc.total,
+        es_nota_credito=doc.es_nota_credito,
+        validado_por=doc.validado_por,
+        fecha_validacion=doc.fecha_validacion,
+        sugerencia=_build_sugerencia(doc),
     )
+
+
+@router.get("/{candidate_id}", response_model=CandidateDetailResponse)
+def get_candidate(
+    candidate_id: int, _persona_autorizada: str = Depends(get_current_user)
+) -> CandidateDetailResponse:
+    entry = candidate_document_model.get_with_email(candidate_id)
+    if entry is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
+    return _to_detail_response(entry)
+
+
+@router.post("/{candidate_id}/validate", response_model=CandidateDetailResponse)
+def validate_candidate(
+    candidate_id: int,
+    payload: ValidateRequest,
+    persona_autorizada: str = Depends(get_current_user),
+) -> CandidateDetailResponse:
+    if candidate_document_model.get_by_id(candidate_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
+    try:
+        validate_and_archive(
+            candidate_id=candidate_id,
+            fecha_factura=payload.fecha_factura,
+            numero_factura=payload.numero_factura,
+            total=payload.total,
+            es_nota_credito=payload.es_nota_credito,
+            validado_por=persona_autorizada,
+            proveedor_id=payload.proveedor_id,
+            proveedor_nombre_nuevo=payload.proveedor_nombre_nuevo,
+        )
+    except CampoInvalidoError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    except ProveedorInactivoError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": str(exc), "proveedor_id": exc.proveedor_id},
+        ) from exc
+    except candidate_document_model.DocumentoNoEnRevisionError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except candidate_document_model.ArchivadoDuplicadoError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": str(exc), "documento_id": exc.documento_id},
+        ) from exc
+
+    entry = candidate_document_model.get_with_email(candidate_id)
+    return _to_detail_response(entry)
+
+
+@router.post("/{candidate_id}/reclassify", response_model=ReclassifyResponse)
+def reclassify_candidate(
+    candidate_id: int,
+    payload: ReclassifyRequest,
+    _persona_autorizada: str = Depends(get_current_user),
+) -> ReclassifyResponse:
+    if payload.estado not in candidate_document_model.ESTADOS_RECLASIFICABLES:
+        opciones = ", ".join(candidate_document_model.ESTADOS_RECLASIFICABLES)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"estado debe ser uno de: {opciones}",
+        )
+    if candidate_document_model.get_by_id(candidate_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado"
+        )
+    try:
+        doc = candidate_document_model.reclassify(candidate_id, payload.estado)
+    except candidate_document_model.DocumentoNoEnRevisionError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return ReclassifyResponse(id=doc.id, estado=doc.estado)
 
 
 @router.get("/{candidate_id}/attachment")

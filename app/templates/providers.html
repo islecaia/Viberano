@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Proveedores · Invoice Manager{% endblock %}
+{% block content %}
+  <h1>Proveedores</h1>
+
+  <form id="create-form" class="card">
+    <label for="nombre">Nombre del proveedor</label>
+    <input id="nombre" type="text" required />
+    <label for="identificador_fiscal">Identificador fiscal (opcional)</label>
+    <input id="identificador_fiscal" type="text" />
+    <button type="submit">Añadir proveedor</button>
+    <p id="create-error" class="status desconectada" style="display:none"></p>
+  </form>
+
+  {% for proveedor in proveedores %}
+    <div class="card">
+      <p><strong>{{ proveedor.nombre }}</strong></p>
+      {% if proveedor.identificador_fiscal %}<p>{{ proveedor.identificador_fiscal }}</p>{% endif %}
+      <p class="status {{ 'conectada' if proveedor.activo else 'desconectada' }}">{{ 'Activo' if proveedor.activo else 'Inactivo' }}</p>
+      <button type="button" class="toggle-activo" data-id="{{ proveedor.id }}" data-activo="{{ 'true' if proveedor.activo else 'false' }}">
+        {{ 'Desactivar' if proveedor.activo else 'Activar' }}
+      </button>
+    </div>
+  {% else %}
+    <div class="card"><p>Todavía no hay proveedores. Añade el primero arriba.</p></div>
+  {% endfor %}
+
+  <script>
+    document.getElementById("create-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const errorEl = document.getElementById("create-error");
+      errorEl.style.display = "none";
+      const response = await fetch("/api/providers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: document.getElementById("nombre").value,
+          identificador_fiscal: document.getElementById("identificador_fiscal").value || null,
+        }),
+      });
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        errorEl.textContent = data.detail || "No se ha podido añadir el proveedor";
+        errorEl.style.display = "block";
+      }
+    });
+
+    document.querySelectorAll(".toggle-activo").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const activo = button.dataset.activo === "true";
+        await fetch(`/api/providers/${button.dataset.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ activo: !activo }),
+        });
+        window.location.reload();
+      });
+    });
+  </script>
+{% endblock %}

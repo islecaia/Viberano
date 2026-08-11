@@ -1,13 +1,17 @@
-"""Conexión SQLite en modo WAL (research.md §7): una única conexión de escritura por proceso."""
+"""Conexión SQLite en modo WAL (research.md §7 de la feature 001): una única conexión de
+escritura por proceso, más un runner de migraciones versionadas (research.md §1-§2 de
+specs/002-validacion-archivado-facturas/)."""
 
+import logging
 import os
 import sqlite3
 import threading
 from pathlib import Path
 
-_SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+_MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 
 _local = threading.local()
+logger = logging.getLogger("invoice_manager")
 
 
 def _db_path() -> str:
@@ -15,12 +19,37 @@ def _db_path() -> str:
 
 
 def init_db() -> None:
-    """Crea el directorio de datos y aplica el esquema (idempotente)."""
+    """Crea el directorio de datos y aplica las migraciones pendientes (idempotente)."""
     path = Path(_db_path())
     path.parent.mkdir(parents=True, exist_ok=True)
+    _apply_pending_migrations()
+
+
+def _apply_pending_migrations() -> None:
     conn = get_connection()
-    conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT)"
+    )
     conn.commit()
+
+    applied = {row["version"] for row in conn.execute("SELECT version FROM schema_migrations")}
+    pending = sorted(
+        p for p in _MIGRATIONS_DIR.glob("*.sql") if p.stem not in applied
+    )
+    for migration_path in pending:
+        version = migration_path.stem
+        try:
+            conn.executescript(migration_path.read_text(encoding="utf-8"))
+        except sqlite3.Error:
+            conn.rollback()
+            logger.exception("Fallo aplicando la migración %s; revertida", version)
+            raise
+        conn.execute(
+            "INSERT INTO schema_migrations (version, applied_at) VALUES (?, datetime('now'))",
+            (version,),
+        )
+        conn.commit()
+        logger.info("Migración aplicada: %s", version)
 
 
 def get_connection() -> sqlite3.Connection:
