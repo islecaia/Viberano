@@ -17,7 +17,13 @@
       "Bash(echo \"started pid $!\")",
       "Bash(cat /tmp/uvicorn.log 2>&1; echo \"---procs---\"; ps aux 2>/dev/null | grep -i uvicorn | grep -v grep)",
       "Read(//tmp/**)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 8 https://github.com)",
+      "Bash(gh auth *)"
     ],
     "additionalDirectories": [
       "D:\\Antigravity\\Viberano\\app"
