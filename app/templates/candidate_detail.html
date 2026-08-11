@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ candidato.asunto }} · Invoice Manager{% endblock %}
+{% block content %}
+  <a href="/facturas">&larr; Volver a Facturas</a>
+  <h1>{{ candidato.asunto }}</h1>
+
+  <div class="card">
+    <p class="status {{ 'conectada' if candidato.estado == 'REVISIÓN MANUAL' else 'desconectada' }}">{{ candidato.estado }}</p>
+    <p><strong>Remitente:</strong> {{ candidato.remitente }}</p>
+    <p><strong>Fecha del correo:</strong> {{ candidato.fecha_correo }}</p>
+    <p><strong>Motivo:</strong> {{ candidato.motivo_clasificacion }}</p>
+  </div>
+
+  <div class="card">
+    <p><strong>Adjunto original</strong> (solo lectura, sin modificar)</p>
+    <a href="{{ candidato.adjunto_url }}" target="_blank" rel="noopener">
+      <button type="button">Ver / descargar adjunto</button>
+    </a>
+  </div>
+{% endblock %}

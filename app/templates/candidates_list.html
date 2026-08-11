@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Facturas · Invoice Manager{% endblock %}
+{% block content %}
+  <h1>Facturas</h1>
+
+  {% if not cuenta %}
+    <div class="card">
+      <p>Todavía no has conectado ninguna cuenta de correo.</p>
+      <a href="/mailbox/connect"><button type="button">Conectar cuenta</button></a>
+    </div>
+  {% else %}
+    <div class="card">
+      <p><strong>{{ cuenta.email_address }}</strong> — <span class="status {{ cuenta.estado }}">{{ cuenta.estado | replace('_', ' ') }}</span></p>
+      <button id="sync-button" type="button">Sincronizar</button>
+      <p id="sync-status"></p>
+    </div>
+
+    {% if candidatos %}
+      {% for item in candidatos %}
+        <a href="/facturas/{{ item.id }}" style="text-decoration:none; color:inherit;">
+          <div class="card">
+            <p><strong>{{ item.asunto }}</strong></p>
+            <p>{{ item.remitente }} · {{ item.fecha_correo }}</p>
+            <p class="status {{ 'conectada' if item.estado == 'REVISIÓN MANUAL' else 'desconectada' }}">{{ item.estado }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="card"><p>Todavía no hay documentos candidatos. Pulsa "Sincronizar" para buscarlos.</p></div>
+    {% endif %}
+  {% endif %}
+
+  <script>
+    const syncButton = document.getElementById("sync-button");
+    if (syncButton) {
+      syncButton.addEventListener("click", async () => {
+        const statusEl = document.getElementById("sync-status");
+        statusEl.textContent = "Sincronizando...";
+        const response = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync", { method: "POST" });
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          statusEl.textContent = data.detail || "No se ha podido sincronizar";
+        }
+      });
+    }
+  </script>
+{% endblock %}

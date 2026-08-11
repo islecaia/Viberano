@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Conectar cuenta de correo · Invoice Manager{% endblock %}
+{% block content %}
+  <h1>Conectar cuenta de correo</h1>
+
+  {% if cuenta %}
+    <div class="card">
+      <p><strong>{{ cuenta.email_address }}</strong></p>
+      <p class="status {{ cuenta.estado }}">{{ cuenta.estado | replace('_', ' ') }}</p>
+      <p>Proveedor: {{ cuenta.proveedor }}</p>
+    </div>
+  {% else %}
+    <p>Conecta la cuenta de correo donde recibes tus facturas de gasto. Puedes usar Gmail,
+      Microsoft/Outlook o cualquier otro proveedor vía IMAP.</p>
+
+    <form id="connect-form" class="card">
+      <label for="proveedor">Proveedor</label>
+      <select id="proveedor" name="proveedor">
+        <option value="imap">IMAP genérico</option>
+        <option value="gmail">Gmail</option>
+        <option value="microsoft_graph">Microsoft / Outlook</option>
+      </select>
+
+      <label for="email_address">Dirección de correo</label>
+      <input id="email_address" name="email_address" type="email" required placeholder="facturas@tuempresa.com" />
+
+      <div id="imap-fields">
+        <label for="host">Servidor IMAP</label>
+        <input id="host" name="host" type="text" placeholder="imap.tuproveedor.com" />
+        <label for="port">Puerto</label>
+        <input id="port" name="port" type="number" value="993" />
+        <label for="username">Usuario</label>
+        <input id="username" name="username" type="text" />
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" />
+      </div>
+
+      <button type="submit">Conectar</button>
+      <p id="connect-error" class="status desconectada" style="display:none"></p>
+    </form>
+  {% endif %}
+
+  <script>
+    const form = document.getElementById("connect-form");
+    if (form) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const errorEl = document.getElementById("connect-error");
+        errorEl.style.display = "none";
+        const proveedor = document.getElementById("proveedor").value;
+        const email_address = document.getElementById("email_address").value;
+        const credenciales = proveedor === "imap" ? {
+          host: document.getElementById("host").value,
+          port: Number(document.getElementById("port").value),
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value,
+        } : {};
+        const response = await fetch("/api/mailbox-accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ proveedor, email_address, credenciales }),
+        });
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          errorEl.textContent = data.detail || "No se ha podido conectar la cuenta";
+          errorEl.style.display = "block";
+        }
+      });
+    }
+  </script>
+{% endblock %}

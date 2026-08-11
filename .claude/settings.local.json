@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Airtable__get_table_schema",
+      "mcp__claude_ai_Airtable__create_records_for_table",
+      "mcp__claude_ai_Airtable__list_records_for_table",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "Bash(uv --version)",
+      "Bash(mkdir -p app/models app/services/mailbox app/api/routes app/auth app/templates app/db tests/contract tests/integration tests/unit && find app tests -type d)",
+      "Bash(uv init *)",
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(SQLITE_DB_PATH=./data/test_smoke.db ATTACHMENT_STORE_DIR=./data/test_smoke_attachments AUTHORIZED_ACCOUNTS=isleca@protonmail.com APP_PASSWORD=testpass123 SESSION_SECRET=testsecret uv run python -c ' *)",
+      "Bash(rm -rf data/test_smoke.db data/test_smoke_attachments data/dev.db data/attachments data/secrets)",
+      "Bash(mkdir -p data)",
+      "Bash(SQLITE_DB_PATH=./data/dev.db ATTACHMENT_STORE_DIR=./data/attachments AUTHORIZED_ACCOUNTS=isleca@protonmail.com APP_PASSWORD=testpass123 SESSION_SECRET=testsecret nohup uv run uvicorn app.main:app --port 8811)",
+      "Bash(echo \"started pid $!\")",
+      "Bash(cat /tmp/uvicorn.log 2>&1; echo \"---procs---\"; ps aux 2>/dev/null | grep -i uvicorn | grep -v grep)",
+      "Read(//tmp/**)",
+      "Bash(git add *)"
+    ],
+    "additionalDirectories": [
+      "D:\\Antigravity\\Viberano\\app"
+    ]
+  }
+}
