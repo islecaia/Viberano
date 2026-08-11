@@ -31,6 +31,16 @@ NO_ES_FACTURA = "NO ES FACTURA"
 FACTURA_DE_VENTA = "FACTURA DE VENTA"
 
 
+def _extract_json(raw_text: str) -> dict:
+    """Tolera que el modelo envuelva el JSON en \\`\\`\\`json ... \\`\\`\\` o añada texto
+    alrededor, a pesar de la instrucción de responder solo JSON: se queda con la subcadena entre
+    la primera '{' y la última '}'."""
+    start, end = raw_text.find("{"), raw_text.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        raise ValueError(f"Sin JSON reconocible en la respuesta: {raw_text[:200]!r}")
+    return json.loads(raw_text[start : end + 1])
+
+
 def is_supported_format(content_type: str) -> str | None:
     """FR-005: solo PDF/JPG/PNG se consideran candidatos a clasificación."""
     return SUPPORTED_CONTENT_TYPES.get(content_type)
@@ -91,7 +101,7 @@ def classify(remitente: str, asunto: str, texto_extraido: str) -> tuple[str, str
         raw_text = "".join(
             block.text for block in response.content if getattr(block, "type", "") == "text"
         )
-        data = json.loads(raw_text)
+        data = _extract_json(raw_text)
         estado = data.get("estado")
         confianza = float(data.get("confianza", 0))
         motivo = data.get("motivo", "")

@@ -9,6 +9,7 @@
       <p class="status {{ cuenta.estado }}">{{ cuenta.estado | replace('_', ' ') }}</p>
       <p>Proveedor: {{ cuenta.proveedor }}</p>
     </div>
+    <a href="/facturas"><button type="button">Ir a Facturas y sincronizar</button></a>
   {% else %}
     <p>Conecta la cuenta de correo donde recibes tus facturas de gasto. Puedes usar Gmail,
       Microsoft/Outlook o cualquier otro proveedor vía IMAP.</p>
@@ -61,7 +62,7 @@
           body: JSON.stringify({ proveedor, email_address, credenciales }),
         });
         if (response.ok) {
-          window.location.reload();
+          window.location.href = "/facturas";
         } else {
           const data = await response.json();
           errorEl.textContent = data.detail || "No se ha podido conectar la cuenta";

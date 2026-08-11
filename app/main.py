@@ -8,14 +8,20 @@ ya que son las que permiten iniciar sesión.
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
 
-from app.api.routes import api_router
-from app.auth.routes import router as auth_router
-from app.db.session import init_db
-from app.web import router as web_router
+# Debe ejecutarse antes de importar cualquier módulo que lea os.environ (auth, db, servicios de
+# correo/clasificación) para que las variables de .env estén disponibles desde el primer uso.
+load_dotenv()
+
+from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+from fastapi.templating import Jinja2Templates  # noqa: E402
+
+from app.api.routes import api_router  # noqa: E402
+from app.auth.routes import router as auth_router  # noqa: E402
+from app.db.session import init_db  # noqa: E402
+from app.web import router as web_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,

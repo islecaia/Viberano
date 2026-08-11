@@ -29,6 +29,16 @@ def _decode(value: str) -> str:
     )
 
 
+def _clean_error_message(exc: Exception) -> str:
+    """imaplib suele lanzar errores con argumentos en bytes (p. ej. b'authentication failed');
+    esto los decodifica para que el mensaje mostrado al usuario sea texto legible."""
+    parts = [
+        arg.decode("utf-8", errors="replace") if isinstance(arg, bytes) else str(arg)
+        for arg in exc.args
+    ]
+    return " ".join(parts) if parts else str(exc)
+
+
 class ImapConnector(MailboxConnector):
     def __init__(self, host: str, port: int, username: str, password: str) -> None:
         self._host = host
@@ -42,7 +52,7 @@ class ImapConnector(MailboxConnector):
             conn.login(self._username, self._password)
             return conn
         except (OSError, imaplib.IMAP4.error) as exc:
-            raise MailboxConnectionError(str(exc)) from exc
+            raise MailboxConnectionError(_clean_error_message(exc)) from exc
 
     def connect(self) -> None:
         conn = self._open()

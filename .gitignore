@@ -12,3 +12,6 @@ __pycache__/
 
 # Datos en runtime (adjuntos, credenciales, SQLite) — nunca en control de versiones
 data/
+
+# PDFs de prueba para scripts/send_invoices_from_folder.py — nunca en control de versiones
+facturas/

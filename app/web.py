@@ -80,3 +80,27 @@ def factura_detail_page(request: Request, candidate_id: int):
     return templates.TemplateResponse(
         request, "candidate_detail.html", {"candidato": candidato, "active_tab": "facturas"}
     )
+
+
+def _placeholder_page(request: Request, active_tab: str, titulo: str):
+    persona = _current_user_or_none(request)
+    if persona is None:
+        return RedirectResponse(url="/login")
+    return templates.TemplateResponse(
+        request, "placeholder.html", {"active_tab": active_tab, "titulo": titulo}
+    )
+
+
+@router.get("/proveedores", response_class=HTMLResponse)
+def proveedores_page(request: Request):
+    return _placeholder_page(request, "proveedores", "Proveedores")
+
+
+@router.get("/conciliacion", response_class=HTMLResponse)
+def conciliacion_page(request: Request):
+    return _placeholder_page(request, "conciliacion", "Conciliación")
+
+
+@router.get("/actividad", response_class=HTMLResponse)
+def actividad_page(request: Request):
+    return _placeholder_page(request, "actividad", "Actividad")

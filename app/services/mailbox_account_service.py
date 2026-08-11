@@ -12,6 +12,12 @@ from app.services.mailbox.imap import ImapConnector
 
 PROVEEDORES_VALIDOS = {"gmail", "imap", "microsoft_graph"}
 
+_CAMPOS_REQUERIDOS = {
+    "imap": ["host", "username", "password"],
+    "gmail": ["access_token", "refresh_token", "client_id", "client_secret"],
+    "microsoft_graph": ["access_token"],
+}
+
 
 class CredencialesInvalidasError(Exception):
     pass
@@ -21,7 +27,18 @@ class CuentaYaConectadaError(Exception):
     pass
 
 
+def _validar_campos(proveedor: str, credenciales: dict) -> None:
+    faltantes = [campo for campo in _CAMPOS_REQUERIDOS[proveedor] if not credenciales.get(campo)]
+    if faltantes:
+        raise CredencialesInvalidasError(
+            f"Faltan credenciales para {proveedor}: {', '.join(faltantes)}. "
+            "La conexión OAuth2 de Gmail/Microsoft todavía no está implementada en esta "
+            "interfaz; usa IMAP genérico por ahora."
+        )
+
+
 def build_connector(proveedor: str, credenciales: dict) -> MailboxConnector:
+    _validar_campos(proveedor, credenciales)
     if proveedor == "imap":
         return ImapConnector(
             host=credenciales["host"],
