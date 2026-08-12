@@ -24,7 +24,7 @@
       {% endif %}
     </div>
 
-    {% for mes in meses %}
+    {% for mes in meses | reverse %}
       <div class="card">
         <p><strong>{{ mes.mes }}</strong>{% if not mes.completo %} <span class="suggested-badge">mes parcial</span>{% endif %}</p>
         <p>{{ mes.total }} factura{{ 's' if mes.total != 1 else '' }} archivada{{ 's' if mes.total != 1 else '' }}</p>
