@@ -8,9 +8,11 @@ from app.auth.session import verify_session_token
 from app.models import bank_movement as bank_movement_model
 from app.models import bank_statement as bank_statement_model
 from app.models import candidate_document as candidate_document_model
+from app.models import ingested_email as ingested_email_model
 from app.models import mailbox_account as mailbox_account_model
 from app.models import provider as provider_model
 from app.models import reconciliation_candidate as reconciliation_candidate_model
+from app.models import sync_run as sync_run_model
 from app.services import metrics_service
 
 router = APIRouter()
@@ -47,6 +49,7 @@ def facturas_page(request: Request):
         return RedirectResponse(url="/login")
     cuenta = mailbox_account_model.get_for_persona(persona)
     candidatos = []
+    lote = None
     if cuenta:
         candidatos = [
             {
@@ -59,10 +62,29 @@ def facturas_page(request: Request):
             }
             for entry in candidate_document_model.list_with_email()
         ]
+        ultimo = sync_run_model.get_ultimo(cuenta.id)
+        if ultimo is not None:
+            fallidos = ingested_email_model.list_fallidos(ultimo.id)
+            lote = {
+                "id": ultimo.id,
+                "estado": ultimo.estado,
+                "correos_nuevos_detectados": ultimo.correos_nuevos_detectados,
+                "correos_con_adjuntos_candidatos": ultimo.correos_con_adjuntos_candidatos,
+                "candidatos_generados": ultimo.candidatos_generados,
+                "fallidos": [
+                    {
+                        "id": c.id,
+                        "remitente": c.remitente,
+                        "asunto": c.asunto,
+                        "motivo_fallo": c.motivo_fallo,
+                    }
+                    for c in fallidos
+                ],
+            }
     return templates.TemplateResponse(
         request,
         "candidates_list.html",
-        {"cuenta": cuenta, "candidatos": candidatos, "active_tab": "facturas"},
+        {"cuenta": cuenta, "candidatos": candidatos, "lote": lote, "active_tab": "facturas"},
     )
 
 

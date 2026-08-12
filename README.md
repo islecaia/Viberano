@@ -25,6 +25,13 @@ proyecto. Features implementadas hasta ahora:
   archivaron cada mes de un periodo (por fecha de emisión), y la media del periodo, distinguiendo
   la media de meses completos de la que incluye un mes parcial (el mes en curso, o el primer mes
   de la cuenta conectada si empezó a mitad de mes). Consulta de solo lectura.
+- [specs/006-lotes-aprobacion-previa/](specs/006-lotes-aprobacion-previa/) — lotes con aprobación
+  previa: sincronizar ya no clasifica ni guarda documentos candidato de inmediato — primero
+  analiza el buzón y muestra un resumen (correos nuevos, correos con adjuntos candidatos); solo
+  al aprobar explícitamente el lote se clasifica y se archiva. Si un correo falla al procesarse,
+  el resto del lote sigue adelante y el fallido queda visible con su motivo, reintentable sin
+  repetir los demás; si la ejecución se interrumpe, reanudarla continúa sin reprocesar lo ya
+  guardado.
 
 ## Requisitos
 

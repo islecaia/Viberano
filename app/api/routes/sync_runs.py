@@ -1,25 +1,36 @@
-"""Endpoints de contracts/api.md: POST /api/mailbox-accounts/{id}/sync, GET /api/sync-runs/{id}.
+"""Endpoints de contracts/api.md: analizar un lote, ejecutarlo (aprobar/reanudar/reintentar),
+consultarlo.
 
-Nota de implementación: esta versión ejecuta la sincronización de forma síncrona dentro de la
-propia petición (adecuado al volumen esperado, research.md §7) en vez de encolarla en segundo
-plano; por eso el `estado` devuelto puede llegar ya como `completada` o `interrumpida` en la
-respuesta 202, no solo `en_curso`. `GET /api/sync-runs/{id}` sigue siendo válido para consultarla
-después.
+Nota de implementación: tanto `analizar_lote()` como `ejecutar_lote()` se ejecutan de forma
+síncrona dentro de la propia petición (adecuado al volumen esperado, research.md §7 de la
+feature 001) en vez de encolarse en segundo plano.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.auth.session import get_current_user
+from app.models import ingested_email as ingested_email_model
 from app.models import sync_run as sync_run_model
+from app.models.sync_run import SyncRun
 from app.services.sync_service import (
     CuentaNoDisponibleError,
+    LoteNoEncontradoError,
+    NadaQueEjecutarError,
     SincronizacionEnCursoError,
-    start_sync,
+    analizar_lote,
+    ejecutar_lote,
 )
 
 mailbox_sync_router = APIRouter(prefix="/mailbox-accounts", tags=["sync"])
 sync_runs_router = APIRouter(prefix="/sync-runs", tags=["sync"])
+
+
+class CorreoFallidoRef(BaseModel):
+    id: int
+    remitente: str
+    asunto: str
+    motivo_fallo: str | None = None
 
 
 class SyncRunResponse(BaseModel):
@@ -29,21 +40,59 @@ class SyncRunResponse(BaseModel):
     fecha_fin: str | None = None
     correos_procesados: int
     candidatos_generados: int
+    correos_nuevos_detectados: int
+    correos_con_adjuntos_candidatos: int
+    correos_fallidos: list[CorreoFallidoRef] = []
+
+
+def _to_response(sync_run: SyncRun) -> SyncRunResponse:
+    fallidos = [
+        CorreoFallidoRef(
+            id=correo.id,
+            remitente=correo.remitente,
+            asunto=correo.asunto,
+            motivo_fallo=correo.motivo_fallo,
+        )
+        for correo in ingested_email_model.list_fallidos(sync_run.id)
+    ]
+    return SyncRunResponse(**sync_run.__dict__, correos_fallidos=fallidos)
 
 
 @mailbox_sync_router.post(
     "/{account_id}/sync", status_code=status.HTTP_202_ACCEPTED, response_model=SyncRunResponse
 )
-def trigger_sync(
+def trigger_analisis(
     account_id: int, persona_autorizada: str = Depends(get_current_user)
 ) -> SyncRunResponse:
     try:
-        sync_run = start_sync(cuenta_id=account_id, persona_autorizada=persona_autorizada)
+        sync_run = analizar_lote(cuenta_id=account_id, persona_autorizada=persona_autorizada)
     except SincronizacionEnCursoError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except CuentaNoDisponibleError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    return SyncRunResponse(**sync_run.__dict__)
+    return _to_response(sync_run)
+
+
+@mailbox_sync_router.post(
+    "/{account_id}/sync/{sync_run_id}/execute", response_model=SyncRunResponse
+)
+def trigger_ejecucion(
+    account_id: int,
+    sync_run_id: int,
+    persona_autorizada: str = Depends(get_current_user),
+) -> SyncRunResponse:
+    sync_run_actual = sync_run_model.get_by_id(sync_run_id)
+    if sync_run_actual is None or sync_run_actual.cuenta_id != account_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote no encontrado")
+    try:
+        sync_run = ejecutar_lote(sync_run_id=sync_run_id, persona_autorizada=persona_autorizada)
+    except LoteNoEncontradoError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except NadaQueEjecutarError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    return _to_response(sync_run)
 
 
 @sync_runs_router.get("/{sync_id}", response_model=SyncRunResponse)
@@ -55,4 +104,4 @@ def get_sync_run(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sincronización no encontrada"
         )
-    return SyncRunResponse(**sync_run.__dict__)
+    return _to_response(sync_run)

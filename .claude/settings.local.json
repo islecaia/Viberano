@@ -56,7 +56,12 @@
       "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b/test.db uv run python -c ' *)",
       "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b\")",
       "Bash(rm -f \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migrations_fresh.db\")",
-      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migrations_fresh.db uv run python -c ' *)"
+      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migrations_fresh.db uv run python -c ' *)",
+      "Bash(rm -f \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_fresh.db\")",
+      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_fresh.db uv run python -c ' *)",
+      "Bash(cp \"d:/Antigravity/Viberano/data/invoice_manager.db\" \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db\")",
+      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db uv run python -c ' *)",
+      "Bash(rm -f \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db\")"
     ],
     "additionalDirectories": [
       "D:\\Antigravity\\Viberano\\app"

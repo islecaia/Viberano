@@ -16,6 +16,31 @@
       <p id="sync-status"></p>
     </div>
 
+    {% if lote and lote.estado == 'pendiente_aprobacion' %}
+      <div class="card">
+        <p><strong>Lote pendiente de aprobación</strong></p>
+        <p>{{ lote.correos_nuevos_detectados }} correo{{ 's' if lote.correos_nuevos_detectados != 1 else '' }} nuevo{{ 's' if lote.correos_nuevos_detectados != 1 else '' }}, {{ lote.correos_con_adjuntos_candidatos }} con posible factura adjunta.</p>
+        <button type="button" id="lote-action-button" data-lote-id="{{ lote.id }}">Aprobar y procesar</button>
+        <p id="lote-error" class="status desconectada" style="display:none"></p>
+      </div>
+    {% elif lote and lote.estado == 'interrumpida' %}
+      <div class="card">
+        <p><strong>Lote interrumpido</strong></p>
+        <p class="status desconectada">Se interrumpió por un error inesperado antes de terminar. Los correos ya procesados se conservan.</p>
+        <button type="button" id="lote-action-button" data-lote-id="{{ lote.id }}">Reanudar</button>
+        <p id="lote-error" class="status desconectada" style="display:none"></p>
+      </div>
+    {% elif lote and lote.estado == 'completada' and lote.fallidos %}
+      <div class="card">
+        <p><strong>Correos que no se pudieron procesar</strong></p>
+        {% for correo in lote.fallidos %}
+          <p>{{ correo.asunto }} — <span class="status desconectada">{{ correo.motivo_fallo }}</span></p>
+        {% endfor %}
+        <button type="button" id="lote-action-button" data-lote-id="{{ lote.id }}">Reintentar fallidos</button>
+        <p id="lote-error" class="status desconectada" style="display:none"></p>
+      </div>
+    {% endif %}
+
     {% set doc_status_class = {
       'PROCESADA': 'procesada',
       'REVISIÓN MANUAL': 'revision-manual',
@@ -50,13 +75,34 @@
     if (syncButton) {
       syncButton.addEventListener("click", async () => {
         const statusEl = document.getElementById("sync-status");
-        statusEl.textContent = "Sincronizando...";
+        statusEl.textContent = "Buscando correos nuevos...";
         const response = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync", { method: "POST" });
         if (response.ok) {
           window.location.reload();
         } else {
           const data = await response.json();
-          statusEl.textContent = data.detail || "No se ha podido sincronizar";
+          statusEl.textContent = data.detail || "No se ha podido analizar el buzón";
+        }
+      });
+    }
+
+    const loteActionButton = document.getElementById("lote-action-button");
+    if (loteActionButton) {
+      loteActionButton.addEventListener("click", async () => {
+        const errorEl = document.getElementById("lote-error");
+        errorEl.style.display = "none";
+        loteActionButton.disabled = true;
+        const response = await fetch(
+          `/api/mailbox-accounts/{{ cuenta.id }}/sync/${loteActionButton.dataset.loteId}/execute`,
+          { method: "POST" }
+        );
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          errorEl.textContent = data.detail || "No se ha podido procesar el lote";
+          errorEl.style.display = "block";
+          loteActionButton.disabled = false;
         }
       });
     }
