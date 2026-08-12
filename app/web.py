@@ -141,12 +141,14 @@ def factura_detail_page(request: Request, candidate_id: int):
     )
 
 
-def _placeholder_page(request: Request, active_tab: str, titulo: str):
+def _placeholder_page(request: Request, active_tab: str, titulo: str, descripcion: str = ""):
     persona = _current_user_or_none(request)
     if persona is None:
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
-        request, "placeholder.html", {"active_tab": active_tab, "titulo": titulo}
+        request,
+        "placeholder.html",
+        {"active_tab": active_tab, "titulo": titulo, "descripcion": descripcion},
     )
 
 
@@ -202,4 +204,9 @@ def conciliacion_detail_page(request: Request, reconciliation_id: int):
 
 @router.get("/actividad", response_class=HTMLResponse)
 def actividad_page(request: Request):
-    return _placeholder_page(request, "actividad", "Actividad")
+    return _placeholder_page(
+        request,
+        "actividad",
+        "Actividad",
+        "Historial de sincronizaciones y acciones sobre tus facturas",
+    )

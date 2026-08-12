@@ -2,6 +2,7 @@
 {% block title %}{{ titulo }} · Invoice Manager{% endblock %}
 {% block content %}
   <h1>{{ titulo }}</h1>
+  {% if descripcion %}<p class="page-subtitle">{{ descripcion }}</p>{% endif %}
   <div class="card">
     <p><strong>Próximamente</strong></p>
     <p>Esta sección todavía no está disponible — llegará en una futura feature del producto.</p>
