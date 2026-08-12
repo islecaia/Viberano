@@ -142,6 +142,21 @@ tenía ningún correo `PENDIENTE`/`FALLIDO` que ejecutar — `POST .../execute` 
 
 ---
 
+## Phase 9: Addendum — Feedback de progreso en tiempo real durante la sincronización
+
+**Purpose**: `analizar_lote()`/`ejecutar_lote()` son síncronas dentro de su propia petición HTTP
+(research.md §7 de la feature 001) y pueden tardar varios segundos; la UI solo mostraba un
+spinner/texto estático, sin indicar qué fase está en curso — a petición explícita del usuario.
+
+- [X] T022 [US1] Crear app/services/sync_progress.py: estado efímero en memoria (`dict` + `threading.Lock`, sin persistir) con `set_mensaje(cuenta_id, mensaje)`, `get_mensaje(cuenta_id)`, `clear(cuenta_id)` — verificado en proceso con un thread separado ejecutando `ejecutar_lote()` mientras el thread principal sondea y observa los mensajes cambiar
+- [X] T023 [US1] Instrumentar app/services/sync_service.py: `analizar_lote()` publica "Conectando con el buzón…" → "Leyendo correos nuevos…" → "Analizando adjuntos… (i/n)" (por correo, dentro de `_analizar_mensajes()`) → "Guardando resultados…"; `ejecutar_lote()` publica "Clasificando con IA… (i/n correos)" por correo y "Finalizando…"; ambas limpian el mensaje en un `finally` sin importar cómo terminen (éxito, fallo aislado o excepción) (depende de T022) — verificado en proceso: sin mensaje residual tras terminar en cualquier caso
+- [X] T024 [US1] Añadir `GET /api/mailbox-accounts/{id}/sync-progress` en app/api/routes/sync_runs.py: `{ en_progreso, mensaje }` leyendo `sync_progress.get_mensaje()`, `404` si la cuenta no pertenece a la persona autorizada (depende de T022) — verificado en proceso
+- [X] T025 [US1] Actualizar app/templates/candidates_list.html: `iniciarSondeoProgreso()` hace `fetch` cada 2000ms a `sync-progress` y actualiza el texto mostrado bajo los botones "Sincronizar"/"Aprobar y procesar"/"Reanudar"/"Reintentar fallidos" mientras la petición síncrona sigue en curso; se detiene el sondeo en un `finally` al resolverse la petición principal (depende de T024) — verificado que la plantilla renderiza el endpoint y el intervalo correctamente
+
+**Checkpoint**: el mensaje visible nunca queda estático más de 2s mientras la sincronización sigue viva (sondeo cada 2000ms, por debajo del límite de 3s pedido).
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

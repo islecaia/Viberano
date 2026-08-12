@@ -11,8 +11,10 @@ from pydantic import BaseModel
 
 from app.auth.session import get_current_user
 from app.models import ingested_email as ingested_email_model
+from app.models import mailbox_account as mailbox_account_model
 from app.models import sync_run as sync_run_model
 from app.models.sync_run import SyncRun
+from app.services import sync_progress
 from app.services.mailbox.base import MailboxConnectionError
 from app.services.sync_service import (
     CuentaNoDisponibleError,
@@ -49,6 +51,11 @@ class AnalisisResponse(BaseModel):
     lote: SyncRunResponse | None = None
 
 
+class ProgresoResponse(BaseModel):
+    en_progreso: bool
+    mensaje: str | None = None
+
+
 def _to_response(sync_run: SyncRun) -> SyncRunResponse:
     fallidos = [
         CorreoFallidoRef(
@@ -82,6 +89,20 @@ def trigger_analisis(
     if sync_run is None:
         return AnalisisResponse(lote=None)
     return AnalisisResponse(lote=_to_response(sync_run))
+
+
+@mailbox_sync_router.get("/{account_id}/sync-progress", response_model=ProgresoResponse)
+def get_sync_progress(
+    account_id: int, persona_autorizada: str = Depends(get_current_user)
+) -> ProgresoResponse:
+    """Sondeo (polling) del progreso de un análisis o ejecución en curso: `analizar_lote()` y
+    `ejecutar_lote()` corren de forma síncrona dentro de su propia petición, así que este
+    endpoint solo expone un mensaje informativo en memoria (`sync_progress`), no dispara nada."""
+    account = mailbox_account_model.get_by_id(account_id)
+    if account is None or account.persona_autorizada != persona_autorizada:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cuenta no encontrada")
+    mensaje = sync_progress.get_mensaje(account_id)
+    return ProgresoResponse(en_progreso=mensaje is not None, mensaje=mensaje)
 
 
 @mailbox_sync_router.post(

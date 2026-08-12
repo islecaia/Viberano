@@ -71,21 +71,45 @@
   {% endif %}
 
   <script>
+    // Sondeo cada 2s de GET .../sync-progress mientras analizar_lote()/ejecutar_lote() siguen
+    // en marcha en el backend (son síncronas dentro de su propia petición): el mensaje mostrado
+    // se refresca antes de que puedan pasar 3s sin cambios visibles.
+    function iniciarSondeoProgreso(elemento) {
+      const intervalId = setInterval(async () => {
+        try {
+          const resp = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync-progress");
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (data.en_progreso && data.mensaje) {
+            elemento.textContent = data.mensaje;
+          }
+        } catch (err) {
+          // Un fallo puntual de sondeo no debe interrumpir la sincronización en curso.
+        }
+      }, 2000);
+      return () => clearInterval(intervalId);
+    }
+
     const syncButton = document.getElementById("sync-button");
     if (syncButton) {
       syncButton.addEventListener("click", async () => {
         const statusEl = document.getElementById("sync-status");
         statusEl.textContent = "Buscando correos nuevos...";
-        const response = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync", { method: "POST" });
-        const data = await response.json();
-        if (response.ok) {
-          if (data.lote) {
-            window.location.reload();
+        const detenerSondeo = iniciarSondeoProgreso(statusEl);
+        try {
+          const response = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync", { method: "POST" });
+          const data = await response.json();
+          if (response.ok) {
+            if (data.lote) {
+              window.location.reload();
+            } else {
+              statusEl.textContent = "No se han encontrado correos nuevos con posible factura.";
+            }
           } else {
-            statusEl.textContent = "No se han encontrado correos nuevos con posible factura.";
+            statusEl.textContent = data.detail || "No se ha podido analizar el buzón";
           }
-        } else {
-          statusEl.textContent = data.detail || "No se ha podido analizar el buzón";
+        } finally {
+          detenerSondeo();
         }
       });
     }
@@ -96,17 +120,27 @@
         const errorEl = document.getElementById("lote-error");
         errorEl.style.display = "none";
         loteActionButton.disabled = true;
-        const response = await fetch(
-          `/api/mailbox-accounts/{{ cuenta.id }}/sync/${loteActionButton.dataset.loteId}/execute`,
-          { method: "POST" }
-        );
-        if (response.ok) {
-          window.location.reload();
-        } else {
-          const data = await response.json();
-          errorEl.textContent = data.detail || "No se ha podido procesar el lote";
-          errorEl.style.display = "block";
-          loteActionButton.disabled = false;
+        const progresoEl = document.createElement("p");
+        progresoEl.className = "page-subtitle";
+        progresoEl.textContent = "Procesando…";
+        loteActionButton.insertAdjacentElement("afterend", progresoEl);
+        const detenerSondeo = iniciarSondeoProgreso(progresoEl);
+        try {
+          const response = await fetch(
+            `/api/mailbox-accounts/{{ cuenta.id }}/sync/${loteActionButton.dataset.loteId}/execute`,
+            { method: "POST" }
+          );
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            const data = await response.json();
+            errorEl.textContent = data.detail || "No se ha podido procesar el lote";
+            errorEl.style.display = "block";
+            loteActionButton.disabled = false;
+            progresoEl.remove();
+          }
+        } finally {
+          detenerSondeo();
         }
       });
     }

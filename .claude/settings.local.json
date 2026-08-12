@@ -78,7 +78,8 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 3 http://127.0.0.1:8000/login)",
       "Bash(netstat -ano)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}, tiempo: %{time_total}s\\\\n\" --max-time 5 http://127.0.0.1:8000/login)",
-      "PowerShell(taskkill /F /PID 7260 /T 2>&1)"
+      "PowerShell(taskkill /F /PID 7260 /T 2>&1)",
+      "Bash(cd \"d:/Antigravity/Viberano\" && rm -fv data/invoice_manager.db data/invoice_manager.db-wal data/invoice_manager.db-shm 2>&1)"
     ],
     "additionalDirectories": [
       "D:\\Antigravity\\Viberano\\app"

@@ -19,7 +19,7 @@ from app.models import pending_attachment as pending_attachment_model
 from app.models import sync_run as sync_run_model
 from app.models.ingested_email import IngestedEmail
 from app.models.sync_run import SyncRun
-from app.services import attachment_store, classification, secret_store
+from app.services import attachment_store, classification, secret_store, sync_progress
 from app.services.mailbox_account_service import build_connector
 
 logger = logging.getLogger("invoice_manager")
@@ -55,38 +55,44 @@ def analizar_lote(cuenta_id: int, persona_autorizada: str) -> SyncRun | None:
             "Ya hay un lote pendiente de aprobación o en ejecución para esta cuenta"
         )
 
-    credenciales = secret_store.retrieve(account.credenciales_ref)
-    connector = build_connector(account.proveedor, credenciales)
-    since = (
-        datetime.fromisoformat(account.ultima_sincronizacion_cursor)
-        if account.ultima_sincronizacion_cursor
-        else None
-    )
-
-    messages = connector.list_new_messages(since)
-    analizados = _analizar_mensajes(account.id, connector, messages)
-    correos_con_adjuntos = sum(1 for correo in analizados if correo["adjuntos"])
-
-    # El buzón ya se leyó hasta aquí independientemente de si hay algo que revisar — avanzar el
-    # cursor evita reanalizar los mismos correos sin adjunto en la siguiente sincronización.
-    mailbox_account_model.update_cursor(account.id, datetime.now(UTC).isoformat())
-
-    if correos_con_adjuntos == 0:
-        return None
-
-    sync_run = sync_run_model.create_analisis(
-        cuenta_id=cuenta_id, iniciada_por=persona_autorizada
-    )
     try:
-        _persistir_correos_analizados(sync_run.id, account.id, analizados)
-        sync_run_model.guardar_resumen(sync_run.id, len(analizados), correos_con_adjuntos)
-    except Exception:
-        logger.exception(
-            "Análisis del lote %s interrumpido al guardar los datos", sync_run.id
+        sync_progress.set_mensaje(cuenta_id, "Conectando con el buzón…")
+        credenciales = secret_store.retrieve(account.credenciales_ref)
+        connector = build_connector(account.proveedor, credenciales)
+        since = (
+            datetime.fromisoformat(account.ultima_sincronizacion_cursor)
+            if account.ultima_sincronizacion_cursor
+            else None
         )
-        sync_run_model.marcar_interrumpida(sync_run.id)
-        raise
-    return sync_run_model.get_by_id(sync_run.id)
+
+        sync_progress.set_mensaje(cuenta_id, "Leyendo correos nuevos…")
+        messages = connector.list_new_messages(since)
+        analizados = _analizar_mensajes(account.id, connector, messages)
+        correos_con_adjuntos = sum(1 for correo in analizados if correo["adjuntos"])
+
+        # El buzón ya se leyó hasta aquí independientemente de si hay algo que revisar — avanzar
+        # el cursor evita reanalizar los mismos correos sin adjunto en la siguiente sincronización.
+        mailbox_account_model.update_cursor(account.id, datetime.now(UTC).isoformat())
+
+        if correos_con_adjuntos == 0:
+            return None
+
+        sync_progress.set_mensaje(cuenta_id, "Guardando resultados…")
+        sync_run = sync_run_model.create_analisis(
+            cuenta_id=cuenta_id, iniciada_por=persona_autorizada
+        )
+        try:
+            _persistir_correos_analizados(sync_run.id, account.id, analizados)
+            sync_run_model.guardar_resumen(sync_run.id, len(analizados), correos_con_adjuntos)
+        except Exception:
+            logger.exception(
+                "Análisis del lote %s interrumpido al guardar los datos", sync_run.id
+            )
+            sync_run_model.marcar_interrumpida(sync_run.id)
+            raise
+        return sync_run_model.get_by_id(sync_run.id)
+    finally:
+        sync_progress.clear(cuenta_id)
 
 
 def _analizar_mensajes(cuenta_id: int, connector, messages) -> list[dict]:
@@ -94,7 +100,9 @@ def _analizar_mensajes(cuenta_id: int, connector, messages) -> list[dict]:
     en `attachment_store` todavía, para poder descartar el lote entero sin dejar rastro si
     resulta que no tiene ningún adjunto candidato."""
     analizados = []
-    for message in messages:
+    total = len(messages)
+    for indice, message in enumerate(messages, start=1):
+        sync_progress.set_mensaje(cuenta_id, f"Analizando adjuntos… ({indice}/{total})")
         # FR-009 (feature 001): un correo ya ingerido no se vuelve a analizar.
         if ingested_email_model.find_existing(cuenta_id, message.message_id) is not None:
             continue
@@ -175,22 +183,33 @@ def ejecutar_lote(sync_run_id: int, persona_autorizada: str) -> SyncRun:
         return sync_run_model.get_by_id(sync_run_id)
 
     sync_run_model.marcar_en_curso(sync_run_id)
+    total = len(correos)
     try:
-        for correo in correos:
-            try:
-                _procesar_correo_pendiente(sync_run_id, correo)
-            except Exception as exc:  # noqa: BLE001 - FR-009: un correo no bloquea el resto
-                logger.warning(
-                    "Correo %s del lote %s falló al procesarse: %s", correo.id, sync_run_id, exc
+        try:
+            for indice, correo in enumerate(correos, start=1):
+                sync_progress.set_mensaje(
+                    account.id, f"Clasificando con IA… ({indice}/{total} correos)"
                 )
-                ingested_email_model.marcar_fallido(correo.id, str(exc))
-            sync_run_model.increment_counters(sync_run_id, correos_procesados=1)
-    except Exception:
-        logger.exception(
-            "Ejecución del lote %s interrumpida por un error inesperado", sync_run_id
-        )
-        sync_run_model.marcar_interrumpida(sync_run_id)
-        raise
+                try:
+                    _procesar_correo_pendiente(sync_run_id, correo)
+                except Exception as exc:  # noqa: BLE001 - FR-009: un correo no bloquea el resto
+                    logger.warning(
+                        "Correo %s del lote %s falló al procesarse: %s",
+                        correo.id,
+                        sync_run_id,
+                        exc,
+                    )
+                    ingested_email_model.marcar_fallido(correo.id, str(exc))
+                sync_run_model.increment_counters(sync_run_id, correos_procesados=1)
+            sync_progress.set_mensaje(account.id, "Finalizando…")
+        except Exception:
+            logger.exception(
+                "Ejecución del lote %s interrumpida por un error inesperado", sync_run_id
+            )
+            sync_run_model.marcar_interrumpida(sync_run_id)
+            raise
+    finally:
+        sync_progress.clear(account.id)
 
     sync_run_model.marcar_completada(sync_run_id)
     return sync_run_model.get_by_id(sync_run_id)
