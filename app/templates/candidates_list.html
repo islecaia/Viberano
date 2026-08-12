@@ -16,13 +16,20 @@
       <p id="sync-status"></p>
     </div>
 
+    {% set doc_status_class = {
+      'PROCESADA': 'procesada',
+      'REVISIÓN MANUAL': 'revision-manual',
+      'DUPLICADO IGNORADO': 'duplicado-ignorado',
+      'NO ES FACTURA': 'no-es-factura',
+      'FACTURA DE VENTA': 'factura-de-venta',
+    } %}
     {% if candidatos %}
       {% for item in candidatos %}
         <a href="/facturas/{{ item.id }}" style="text-decoration:none; color:inherit;">
           <div class="card">
             <p><strong>{{ item.asunto }}</strong></p>
             <p>{{ item.remitente }} · {{ item.fecha_correo }}</p>
-            <p class="status {{ 'conectada' if item.estado == 'REVISIÓN MANUAL' else 'desconectada' }}">{{ item.estado }}</p>
+            <p class="doc-status {{ doc_status_class.get(item.estado, '') }}">{{ item.estado }}</p>
             {% if item.estado_conciliacion == 'CONCILIADA' %}
               <span class="badge-conciliacion conciliada">Conciliada</span>
             {% elif item.estado_conciliacion == 'NO ENCONTRADA EN EXTRACTO' %}

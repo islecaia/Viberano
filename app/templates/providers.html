@@ -25,6 +25,7 @@
             {{ 'Desactivar' if proveedor.activo else 'Activar' }}
           </button>
         </div>
+        <p class="toggle-error status desconectada" data-id="{{ proveedor.id }}" style="display:none"></p>
       </div>
 
       <div class="provider-edit" id="edit-{{ proveedor.id }}" style="display:none">
@@ -67,13 +68,22 @@
 
     document.querySelectorAll(".toggle-activo").forEach((button) => {
       button.addEventListener("click", async () => {
+        const id = button.dataset.id;
+        const errorEl = document.querySelector(`.toggle-error[data-id="${id}"]`);
+        errorEl.style.display = "none";
         const activo = button.dataset.activo === "true";
-        await fetch(`/api/providers/${button.dataset.id}`, {
+        const response = await fetch(`/api/providers/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ activo: !activo }),
         });
-        window.location.reload();
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          errorEl.textContent = data.detail || "No se ha podido cambiar el estado del proveedor";
+          errorEl.style.display = "block";
+        }
       });
     });
 

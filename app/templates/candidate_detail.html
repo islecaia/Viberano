@@ -4,8 +4,15 @@
   <a href="/facturas">&larr; Volver a Facturas</a>
   <h1>{{ candidato.asunto }}</h1>
 
+  {% set doc_status_class = {
+    'PROCESADA': 'procesada',
+    'REVISIÓN MANUAL': 'revision-manual',
+    'DUPLICADO IGNORADO': 'duplicado-ignorado',
+    'NO ES FACTURA': 'no-es-factura',
+    'FACTURA DE VENTA': 'factura-de-venta',
+  } %}
   <div class="card">
-    <p class="status {{ 'conectada' if candidato.estado == 'REVISIÓN MANUAL' else 'desconectada' }}">{{ candidato.estado }}</p>
+    <p class="doc-status {{ doc_status_class.get(candidato.estado, '') }}">{{ candidato.estado }}</p>
     <p><strong>Remitente:</strong> {{ candidato.remitente }}</p>
     <p><strong>Fecha del correo:</strong> {{ candidato.fecha_correo }}</p>
     <p><strong>Motivo:</strong> {{ candidato.motivo_clasificacion }}</p>

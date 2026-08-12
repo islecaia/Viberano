@@ -97,6 +97,19 @@
     .badge-conciliacion.conciliada { color: #1E9E5A; background: #E6F6ED; }
     .badge-conciliacion.no-encontrada,
     .badge-conciliacion.pendiente { color: #C4451C; background: #FBEAE3; }
+    .doc-status {
+      display: inline-block;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
+    .doc-status.procesada { background: #DCFCE7; color: #14532D; }
+    .doc-status.revision-manual { background: #FEF3C7; color: #78350F; }
+    .doc-status.duplicado-ignorado { background: #F3E8FF; color: #4C1D95; }
+    .doc-status.no-es-factura { background: #F1F5F9; color: #334155; }
+    .doc-status.factura-de-venta { background: #E0F2FE; color: #0C4A6E; }
     nav.bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -120,11 +133,13 @@
   <main>
     {% block content %}{% endblock %}
   </main>
-  <nav class="bottom-nav">
-    <a href="/facturas" class="{{ 'active' if active_tab == 'facturas' else '' }}">Facturas</a>
-    <a href="/proveedores" class="{{ 'active' if active_tab == 'proveedores' else '' }}">Proveedores</a>
-    <a href="/conciliacion" class="{{ 'active' if active_tab == 'conciliacion' else '' }}">Conciliación</a>
-    <a href="/actividad" class="{{ 'active' if active_tab == 'actividad' else '' }}">Actividad</a>
-  </nav>
+  {% if active_tab %}
+    <nav class="bottom-nav">
+      <a href="/facturas" class="{{ 'active' if active_tab == 'facturas' else '' }}">Facturas</a>
+      <a href="/proveedores" class="{{ 'active' if active_tab == 'proveedores' else '' }}">Proveedores</a>
+      <a href="/conciliacion" class="{{ 'active' if active_tab == 'conciliacion' else '' }}">Conciliación</a>
+      <a href="/actividad" class="{{ 'active' if active_tab == 'actividad' else '' }}">Actividad</a>
+    </nav>
+  {% endif %}
 </body>
 </html>
