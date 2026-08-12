@@ -43,30 +43,33 @@ def start_sync(cuenta_id: int, persona_autorizada: str) -> SyncRun:
 
 
 def _run_sync(account: MailboxAccount, sync_run: SyncRun) -> None:
-    credenciales = secret_store.retrieve(account.credenciales_ref)
-    connector = build_connector(account.proveedor, credenciales)
-
-    since = (
-        datetime.fromisoformat(account.ultima_sincronizacion_cursor)
-        if account.ultima_sincronizacion_cursor
-        else None
-    )
-
+    """Revisión de código: todo el cuerpo queda bajo un único try/except que garantiza marcar
+    `sync_run` como 'interrumpida' ante CUALQUIER fallo (no solo MailboxConnectionError) —
+    sin esto, una excepción inesperada (p. ej. un error de disco al guardar un adjunto) dejaba el
+    `sync_run` en 'en_curso' para siempre, y el índice único de esa tabla bloqueaba cualquier
+    sincronización futura de la cuenta hasta corregirlo a mano en la base de datos."""
     try:
+        credenciales = secret_store.retrieve(account.credenciales_ref)
+        connector = build_connector(account.proveedor, credenciales)
+
+        since = (
+            datetime.fromisoformat(account.ultima_sincronizacion_cursor)
+            if account.ultima_sincronizacion_cursor
+            else None
+        )
+
         messages = connector.list_new_messages(since)
-    except MailboxConnectionError as exc:
-        logger.warning("Sincronización %s interrumpida al listar mensajes: %s", sync_run.id, exc)
-        sync_run_model.finish(sync_run.id, "interrumpida")
-        return
-
-    try:
         for message in messages:
             _process_message(account, sync_run, connector, message)
             sync_run_model.increment_counters(sync_run.id, correos_procesados=1)
     except MailboxConnectionError as exc:
-        logger.warning("Sincronización %s interrumpida a mitad de proceso: %s", sync_run.id, exc)
+        logger.warning("Sincronización %s interrumpida: %s", sync_run.id, exc)
         sync_run_model.finish(sync_run.id, "interrumpida")
         return
+    except Exception:
+        logger.exception("Sincronización %s interrumpida por un error inesperado", sync_run.id)
+        sync_run_model.finish(sync_run.id, "interrumpida")
+        raise
 
     mailbox_account_model.update_cursor(account.id, datetime.now(UTC).isoformat())
     sync_run_model.finish(sync_run.id, "completada")

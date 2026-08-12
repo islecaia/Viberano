@@ -1,8 +1,15 @@
 -- Esquema SQLite de la feature 001-ingesta-facturas-email (data-model.md)
 -- Ningún campo de este esquema permite sobrescribir o eliminar un correo/adjunto original
 -- (Principios III y IV de la constitution): las tablas solo referencian copias de solo lectura.
+-- BEGIN/COMMIT explícitos (revisión de código): si alguna sentencia falla a mitad, el runner de
+-- migraciones (app/db/session.py) hace rollback y no registra la migración como aplicada; sin
+-- esta envoltura, las sentencias ya ejecutadas quedarían confirmadas igualmente (autocommit de
+-- SQLite fuera de una transacción explícita) y el siguiente arranque reintentaría el script
+-- completo, fallando de forma permanente en la primera sentencia ya aplicada.
 
 PRAGMA foreign_keys = ON;
+
+BEGIN TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS mailbox_accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,3 +65,5 @@ CREATE TABLE IF NOT EXISTS candidate_documents (
 
 CREATE INDEX IF NOT EXISTS ix_candidate_documents_correo ON candidate_documents (correo_id);
 CREATE INDEX IF NOT EXISTS ix_candidate_documents_estado ON candidate_documents (estado);
+
+COMMIT;

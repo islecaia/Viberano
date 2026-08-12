@@ -1,6 +1,13 @@
 -- Migración 004: conciliación bancaria
 -- (specs/004-conciliacion-bancaria/data-model.md, research.md)
 -- Solo ADD COLUMN nullable sobre candidate_documents: no hace falta recrear la tabla.
+-- BEGIN/COMMIT explícitos (revisión de código): los ALTER TABLE ADD COLUMN de más abajo no son
+-- idempotentes; sin esta envoltura, un fallo a mitad de script (p. ej. en la creación del índice
+-- único) dejaría columnas ya añadidas y confirmadas sin registrar la migración como aplicada, y
+-- el siguiente arranque reintentaría el script completo, fallando de forma permanente con
+-- "duplicate column name".
+
+BEGIN TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS bank_statements (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,3 +55,5 @@ CREATE TABLE IF NOT EXISTS reconciliation_candidates (
 
 CREATE INDEX IF NOT EXISTS ix_reconciliation_candidates_documento
     ON reconciliation_candidates (documento_id);
+
+COMMIT;
