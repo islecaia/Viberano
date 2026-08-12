@@ -37,10 +37,6 @@ class LoteNoEncontradoError(Exception):
     """El lote no existe, o no pertenece a la cuenta de la persona autorizada (404)."""
 
 
-class NadaQueEjecutarError(Exception):
-    """El lote no tiene ningún correo `PENDIENTE`/`FALLIDO` que procesar (422)."""
-
-
 def analizar_lote(cuenta_id: int, persona_autorizada: str) -> SyncRun | None:
     """FR-001 a FR-003, FR-005: lee el buzón y calcula en memoria qué correos nuevos hay y
     cuáles tienen adjuntos candidatos, sin escribir nada en la base de datos todavía. Solo si
@@ -169,9 +165,14 @@ def ejecutar_lote(sync_run_id: int, persona_autorizada: str) -> SyncRun:
 
     correos = ingested_email_model.list_pendientes_o_fallidos(sync_run_id)
     if not correos:
-        raise NadaQueEjecutarError(
-            f"El lote {sync_run_id} no tiene ningún correo pendiente ni fallido"
-        )
+        # Nada que procesar: puede ser un reintento repetido sobre un lote ya `completada` (dos
+        # clics, dos pestañas), o un lote que nunca llegó a tener ningún correo (dato heredado de
+        # antes de FR-013, o una condición de carrera). En ambos casos se cierra sin error en vez
+        # de dejarlo atascado sin ninguna acción posible desde la UI (bug real observado: un lote
+        # `pendiente_aprobacion` con 0/0 solo podía desbloquearse editando la base de datos).
+        if sync_run.estado != "completada":
+            sync_run_model.marcar_completada(sync_run_id)
+        return sync_run_model.get_by_id(sync_run_id)
 
     sync_run_model.marcar_en_curso(sync_run_id)
     try:

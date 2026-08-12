@@ -61,7 +61,24 @@
       "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_fresh.db uv run python -c ' *)",
       "Bash(cp \"d:/Antigravity/Viberano/data/invoice_manager.db\" \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db\")",
       "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db uv run python -c ' *)",
-      "Bash(rm -f \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db\")"
+      "Bash(rm -f \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/verify_migration_0005_real_copy.db\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object LocalPort,State,OwningProcess; Get-Process | Where-Object { $_.ProcessName -match 'python|uvicorn' } | Select-Object Id,ProcessName,StartTime)",
+      "PowerShell(Get-Process -Id 19072)",
+      "PowerShell(Stop-Process -Id 19072 -Force -Confirm:$false)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Process -Id 19072 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Process -Id 7260 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=7260\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}, tiempo total: %{time_total}s\\\\n\" --max-time 5 http://127.0.0.1:8000/login)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=16120\")",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=7144\")",
+      "PowerShell(Stop-Process -Id 7144 -Force -Confirm:$false -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 16120 -Force -Confirm:$false -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 7260 -Force -Confirm:$false -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 3 http://127.0.0.1:8000/login)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}, tiempo: %{time_total}s\\\\n\" --max-time 5 http://127.0.0.1:8000/login)",
+      "PowerShell(taskkill /F /PID 7260 /T 2>&1)"
     ],
     "additionalDirectories": [
       "D:\\Antigravity\\Viberano\\app"

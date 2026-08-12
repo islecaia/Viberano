@@ -78,11 +78,14 @@ research.md §5) — el comportamiento es el mismo en los tres casos.
   incluir correos fallidos en `correos_fallidos` — "completada" no implica cero fallos, FR-009).
 - `estado: "interrumpida"`: un fallo sistémico (no de un correo concreto) detuvo la ejecución;
   puede volver a llamarse a este mismo endpoint para reanudar (FR-007).
+- Si el lote no tiene ningún correo `PENDIENTE`/`FALLIDO` (nada que ejecutar ni reintentar —
+  p. ej. un doble clic, dos pestañas, o un lote sin ningún correo), el endpoint **no falla**: lo
+  cierra como `completada` si no lo estaba ya, y devuelve su estado actual. Corrige un fallo real
+  observado en producción: antes devolvía `422` y dejaba el lote sin ninguna acción posible desde
+  la UI para desbloquear la cuenta.
 
 **Errores**:
 - `404 Not Found`: el lote no existe o no pertenece a la cuenta de la persona autorizada.
-- `422 Unprocessable Entity`: no queda ningún correo `PENDIENTE` ni `FALLIDO` en este lote (nada
-  que ejecutar o reintentar).
 
 ---
 

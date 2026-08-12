@@ -129,6 +129,19 @@ lote, y la cuenta debe quedar libre de inmediato para una nueva sincronización.
 
 ---
 
+## Phase 8: Hotfix — Lote sin correos pendientes/fallidos quedaba atascado sin salida
+
+**Purpose**: Bug real observado en producción tras T018-T020: un `sync_run` `pendiente_aprobacion`
+con 0 correos (dato heredado de antes de FR-013, o cualquier condición de carrera futura) no
+tenía ningún correo `PENDIENTE`/`FALLIDO` que ejecutar — `POST .../execute` respondía `422` y la
+única forma de desbloquear la cuenta era editar la base de datos a mano.
+
+- [X] T021 [US1] Corregir `ejecutar_lote()` en app/services/sync_service.py: cuando no queda ningún correo `PENDIENTE`/`FALLIDO`, en vez de lanzar `NadaQueEjecutarError` (eliminada, era el único uso), cerrar el lote como `completada` si no lo estaba ya y devolver su estado actual — cubre tanto un lote sin ningún correo desde el principio como un reintento repetido (doble clic, dos pestañas) sobre un lote ya resuelto; actualizar app/api/routes/sync_runs.py (eliminar el `except NadaQueEjecutarError`/import) y contracts/api.md (ya no hay `422` en este endpoint) — verificado en proceso; aplicado además directamente contra el lote 13 atascado en la base de datos real de desarrollo (quedó `completada`, cuenta libre de inmediato)
+
+**Checkpoint**: `POST .../execute` nunca deja un lote sin ninguna acción posible desde la UI.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

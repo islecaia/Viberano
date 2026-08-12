@@ -17,7 +17,6 @@ from app.services.mailbox.base import MailboxConnectionError
 from app.services.sync_service import (
     CuentaNoDisponibleError,
     LoteNoEncontradoError,
-    NadaQueEjecutarError,
     SincronizacionEnCursoError,
     analizar_lote,
     ejecutar_lote,
@@ -100,10 +99,6 @@ def trigger_ejecucion(
         sync_run = ejecutar_lote(sync_run_id=sync_run_id, persona_autorizada=persona_autorizada)
     except LoteNoEncontradoError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except NadaQueEjecutarError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
-        ) from exc
     return _to_response(sync_run)
 
 
