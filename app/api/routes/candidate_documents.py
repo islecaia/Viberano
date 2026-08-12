@@ -9,8 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 
 from app.auth.session import get_current_user
+from app.models import bank_movement as bank_movement_model
 from app.models import candidate_document as candidate_document_model
 from app.models import provider as provider_model
+from app.models import reconciliation_candidate as reconciliation_candidate_model
 from app.services import attachment_store
 from app.services.validation_service import (
     CampoInvalidoError,
@@ -51,6 +53,13 @@ class Sugerencia(BaseModel):
     total: float | None = None
 
 
+class ReconciledMovementRef(BaseModel):
+    id: int
+    fecha: str
+    importe: float
+    concepto: str
+
+
 class CandidateDetailResponse(BaseModel):
     id: int
     estado: str
@@ -67,6 +76,9 @@ class CandidateDetailResponse(BaseModel):
     validado_por: str | None = None
     fecha_validacion: str | None = None
     sugerencia: Sugerencia | None = None
+    estado_conciliacion: str | None = None
+    movimiento_conciliado: ReconciledMovementRef | None = None
+    conciliacion_candidatos: list[ReconciledMovementRef] | None = None
 
 
 class ValidateRequest(BaseModel):
@@ -86,6 +98,16 @@ class ReclassifyRequest(BaseModel):
 class ReclassifyResponse(BaseModel):
     id: int
     estado: str
+
+
+class ReconcileRequest(BaseModel):
+    movimiento_id: int | None = None
+
+
+class ReconcileResponse(BaseModel):
+    id: int
+    estado_conciliacion: str
+    movimiento_id: int | None = None
 
 
 def _to_list_item(entry) -> CandidateListItem:
@@ -140,6 +162,15 @@ def _build_sugerencia(doc) -> Sugerencia | None:
     )
 
 
+def _to_movement_ref(movimiento) -> ReconciledMovementRef:
+    return ReconciledMovementRef(
+        id=movimiento.id,
+        fecha=movimiento.fecha,
+        importe=movimiento.importe,
+        concepto=movimiento.concepto,
+    )
+
+
 def _to_detail_response(entry) -> CandidateDetailResponse:
     doc = entry.documento
     proveedor_ref = None
@@ -147,6 +178,19 @@ def _to_detail_response(entry) -> CandidateDetailResponse:
         proveedor = provider_model.get_by_id(doc.proveedor_id)
         if proveedor is not None:
             proveedor_ref = ProviderRef(id=proveedor.id, nombre=proveedor.nombre)
+
+    movimiento_conciliado = None
+    if doc.movimiento_bancario_id is not None:
+        movimiento = bank_movement_model.get_by_id(doc.movimiento_bancario_id)
+        if movimiento is not None:
+            movimiento_conciliado = _to_movement_ref(movimiento)
+
+    conciliacion_candidatos = None
+    if doc.estado_conciliacion == "PENDIENTE REVISIÓN CONCILIACIÓN":
+        candidatos = reconciliation_candidate_model.list_for_documento(doc.id)
+        movimientos = [bank_movement_model.get_by_id(c.movimiento_id) for c in candidatos]
+        conciliacion_candidatos = [_to_movement_ref(m) for m in movimientos if m is not None]
+
     return CandidateDetailResponse(
         id=doc.id,
         estado=doc.estado,
@@ -163,6 +207,9 @@ def _to_detail_response(entry) -> CandidateDetailResponse:
         validado_por=doc.validado_por,
         fecha_validacion=doc.fecha_validacion,
         sugerencia=_build_sugerencia(doc),
+        estado_conciliacion=doc.estado_conciliacion,
+        movimiento_conciliado=movimiento_conciliado,
+        conciliacion_candidatos=conciliacion_candidatos,
     )
 
 
@@ -238,6 +285,56 @@ def reclassify_candidate(
     except candidate_document_model.DocumentoNoEnRevisionError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return ReclassifyResponse(id=doc.id, estado=doc.estado)
+
+
+@router.post("/{candidate_id}/reconcile", response_model=ReconcileResponse)
+def reconcile_candidate(
+    candidate_id: int,
+    payload: ReconcileRequest,
+    _persona_autorizada: str = Depends(get_current_user),
+) -> ReconcileResponse:
+    """User Story 2 de specs/004-conciliacion-bancaria/ (FR-006): resuelve manualmente un
+    documento PENDIENTE REVISIÓN CONCILIACIÓN, eligiendo un candidato o descartándolos todos."""
+    doc = candidate_document_model.get_by_id(candidate_id)
+    if doc is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado"
+        )
+    if doc.estado_conciliacion != "PENDIENTE REVISIÓN CONCILIACIÓN":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El documento no está pendiente de revisión de conciliación",
+        )
+
+    candidatos = reconciliation_candidate_model.list_for_documento(candidate_id)
+    ids_candidatos = {c.movimiento_id for c in candidatos}
+
+    if payload.movimiento_id is not None and payload.movimiento_id not in ids_candidatos:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{payload.movimiento_id} no es uno de los candidatos de este documento",
+        )
+
+    try:
+        if payload.movimiento_id is not None:
+            actualizado = candidate_document_model.mark_conciliada(
+                candidate_id, payload.movimiento_id, doc.conciliado_con_extracto_id
+            )
+        else:
+            actualizado = candidate_document_model.mark_no_encontrada(
+                candidate_id, doc.conciliado_con_extracto_id
+            )
+    except candidate_document_model.MovimientoYaVinculadoError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except candidate_document_model.ConciliacionYaResueltaError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+    reconciliation_candidate_model.clear_for_documento(candidate_id)
+    return ReconcileResponse(
+        id=actualizado.id,
+        estado_conciliacion=actualizado.estado_conciliacion,
+        movimiento_id=actualizado.movimiento_bancario_id,
+    )
 
 
 @router.get("/{candidate_id}/attachment")

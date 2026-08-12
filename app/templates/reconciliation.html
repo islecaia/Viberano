@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Conciliación · Invoice Manager{% endblock %}
+{% block content %}
+  <h1>Conciliación bancaria</h1>
+
+  <form id="upload-form" class="card">
+    <label for="extracto">Extracto bancario (CSV: fecha, importe, concepto)</label>
+    <input id="extracto" type="file" accept=".csv" required />
+    <button type="submit">Aportar y conciliar</button>
+    <p id="upload-error" class="status desconectada" style="display:none"></p>
+  </form>
+
+  {% if detalle %}
+    <div class="card">
+      <p><strong>Periodo:</strong> {{ detalle.fecha_inicio }} — {{ detalle.fecha_fin }}</p>
+      <p><strong>Movimientos del extracto:</strong> {{ detalle.total_movimientos }}</p>
+      <p><strong>Conciliadas:</strong> {{ detalle.conciliadas|length }} ·
+         <strong>No encontradas:</strong> {{ detalle.no_encontradas|length }} ·
+         <strong>Pendientes de revisión:</strong> {{ detalle.pendientes|length }}</p>
+    </div>
+
+    {% if detalle.pendientes %}
+      <div class="card">
+        <p><strong>Pendientes de revisión manual</strong></p>
+        {% for doc in detalle.pendientes %}
+          <p><a href="/facturas/{{ doc.id }}">Factura #{{ doc.id }}{% if doc.numero_factura %} — {{ doc.numero_factura }}{% endif %} &rarr;</a></p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if detalle.no_encontradas %}
+      <div class="card">
+        <p><strong>No encontradas en el extracto</strong></p>
+        {% for doc in detalle.no_encontradas %}
+          <p><a href="/facturas/{{ doc.id }}">Factura #{{ doc.id }}{% if doc.numero_factura %} — {{ doc.numero_factura }}{% endif %} &rarr;</a></p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if detalle.pendientes_de_justificar %}
+      <div class="card">
+        <p><strong>Movimientos de gasto sin factura asociada</strong></p>
+        {% for mov in detalle.pendientes_de_justificar %}
+          <p>{{ mov.fecha }} · {{ mov.importe }} · {{ mov.concepto }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <script>
+    document.getElementById("upload-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const errorEl = document.getElementById("upload-error");
+      errorEl.style.display = "none";
+      const fileInput = document.getElementById("extracto");
+      const formData = new FormData();
+      formData.append("extracto", fileInput.files[0]);
+      const response = await fetch("/api/reconciliations", { method: "POST", body: formData });
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = `/conciliacion/${data.id}`;
+      } else {
+        const data = await response.json();
+        errorEl.textContent = data.detail || "No se ha podido procesar el extracto";
+        errorEl.style.display = "block";
+      }
+    });
+  </script>
+{% endblock %}

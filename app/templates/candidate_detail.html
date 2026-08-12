@@ -27,6 +27,30 @@
       <p><strong>Total:</strong> {{ candidato.total }}{% if candidato.es_nota_credito %} (nota de crédito){% endif %}</p>
       <p><strong>Validado por:</strong> {{ candidato.validado_por }} el {{ candidato.fecha_validacion }}</p>
     </div>
+
+    <div class="card">
+      <p><strong>Conciliación bancaria</strong></p>
+      {% if candidato.estado_conciliacion == 'CONCILIADA' and candidato.movimiento_conciliado %}
+        <p class="status conectada">CONCILIADA</p>
+        <p>Movimiento: {{ candidato.movimiento_conciliado.fecha }} · {{ candidato.movimiento_conciliado.importe }} · {{ candidato.movimiento_conciliado.concepto }}</p>
+      {% elif candidato.estado_conciliacion == 'NO ENCONTRADA EN EXTRACTO' %}
+        <p class="status desconectada">NO ENCONTRADA EN EXTRACTO</p>
+        <p>No implica impago: solo que no hay un movimiento coincidente en el extracto aportado.</p>
+      {% elif candidato.estado_conciliacion == 'PENDIENTE REVISIÓN CONCILIACIÓN' %}
+        <p class="status desconectada">PENDIENTE REVISIÓN CONCILIACIÓN</p>
+        <p>Hay varios movimientos posibles. Elige el correcto o indica que ninguno lo es.</p>
+        {% for mov in candidato.conciliacion_candidatos %}
+          <p>
+            {{ mov.fecha }} · {{ mov.importe }} · {{ mov.concepto }}
+            <button type="button" class="reconcile-choice-button" data-movimiento-id="{{ mov.id }}">Elegir este movimiento</button>
+          </p>
+        {% endfor %}
+        <button type="button" id="reconcile-none-button">Ninguno es correcto</button>
+        <p id="reconcile-error" class="status desconectada" style="display:none"></p>
+      {% else %}
+        <p>Sin conciliar todavía.</p>
+      {% endif %}
+    </div>
   {% elif candidato.estado == 'REVISIÓN MANUAL' %}
     {% set hay_sugerencia = candidato.sugerido_proveedor_nombre or candidato.sugerido_fecha_factura or candidato.sugerido_numero_factura or candidato.sugerido_total %}
     <form id="validate-form" class="card">
@@ -144,5 +168,35 @@
         }
       });
     });
+
+    async function enviarConciliacion(movimientoId) {
+      const errorEl = document.getElementById("reconcile-error");
+      errorEl.style.display = "none";
+      const response = await fetch("/api/candidate-documents/{{ candidato.id }}/reconcile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movimiento_id: movimientoId }),
+      });
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        errorEl.textContent = data.detail || "No se ha podido resolver la conciliación";
+        errorEl.style.display = "block";
+      }
+    }
+
+    document.querySelectorAll(".reconcile-choice-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        enviarConciliacion(Number(button.dataset.movimientoId));
+      });
+    });
+
+    const reconcileNoneButton = document.getElementById("reconcile-none-button");
+    if (reconcileNoneButton) {
+      reconcileNoneButton.addEventListener("click", () => {
+        enviarConciliacion(null);
+      });
+    }
   </script>
 {% endblock %}

@@ -32,6 +32,15 @@ class ArchivadoDuplicadoError(Exception):
         )
 
 
+class ConciliacionYaResueltaError(Exception):
+    """El documento no está PROCESADA sin conciliar (specs/004-conciliacion-bancaria/,
+    research.md §4)."""
+
+
+class MovimientoYaVinculadoError(Exception):
+    """El movimiento bancario ya está vinculado a otra factura (índice único, Principio I)."""
+
+
 @dataclass(frozen=True)
 class CandidateDocument:
     id: int
@@ -53,6 +62,9 @@ class CandidateDocument:
     sugerido_fecha_factura: str | None
     sugerido_numero_factura: str | None
     sugerido_total: float | None
+    estado_conciliacion: str | None
+    movimiento_bancario_id: int | None
+    conciliado_con_extracto_id: int | None
 
     @classmethod
     def _from_row(cls, row) -> "CandidateDocument":
@@ -76,6 +88,9 @@ class CandidateDocument:
             sugerido_fecha_factura=row["sugerido_fecha_factura"],
             sugerido_numero_factura=row["sugerido_numero_factura"],
             sugerido_total=row["sugerido_total"],
+            estado_conciliacion=row["estado_conciliacion"],
+            movimiento_bancario_id=row["movimiento_bancario_id"],
+            conciliado_con_extracto_id=row["conciliado_con_extracto_id"],
         )
 
 
@@ -129,6 +144,35 @@ def get_by_id(candidate_id: int) -> CandidateDocument | None:
         "SELECT * FROM candidate_documents WHERE id = ?", (candidate_id,)
     ).fetchone()
     return CandidateDocument._from_row(row) if row else None
+
+
+def list_procesada_sin_conciliar(fecha_inicio: str, fecha_fin: str) -> list[CandidateDocument]:
+    """FR-002/FR-012 de specs/004-conciliacion-bancaria/: facturas PROCESADA dentro del periodo
+    del extracto que todavía no se han evaluado en ninguna conciliación."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT * FROM candidate_documents
+        WHERE estado = 'PROCESADA' AND estado_conciliacion IS NULL
+              AND fecha_factura BETWEEN ? AND ?
+        """,
+        (fecha_inicio, fecha_fin),
+    ).fetchall()
+    return [CandidateDocument._from_row(row) for row in rows]
+
+
+def list_by_extracto(extracto_id: int, estado_conciliacion: str) -> list[CandidateDocument]:
+    """Facturas cuyo `estado_conciliacion` actual proviene de este extracto (contracts/api.md
+    de specs/004-conciliacion-bancaria/, GET /api/reconciliations/{id})."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT * FROM candidate_documents
+        WHERE conciliado_con_extracto_id = ? AND estado_conciliacion = ?
+        """,
+        (extracto_id, estado_conciliacion),
+    ).fetchall()
+    return [CandidateDocument._from_row(row) for row in rows]
 
 
 def list_all(estado: str | None = None) -> list[CandidateDocument]:
@@ -264,6 +308,79 @@ def mark_procesada(
         )
     conn.commit()
     return get_by_id(candidate_id)
+
+
+_CONCILIABLE_DESDE = (
+    "(estado_conciliacion IS NULL OR estado_conciliacion = 'PENDIENTE REVISIÓN CONCILIACIÓN')"
+)
+
+
+def _raise_no_conciliable(documento_id: int) -> None:
+    raise ConciliacionYaResueltaError(f"El documento {documento_id} no admite conciliarse ahora")
+
+
+def mark_conciliada(documento_id: int, movimiento_id: int, extracto_id: int) -> CandidateDocument:
+    """FR-003, FR-006 de specs/004-conciliacion-bancaria/: vincula la factura a un movimiento
+    bancario. Válido tanto desde `estado_conciliacion IS NULL` (conciliación automática, único
+    candidato) como desde `'PENDIENTE REVISIÓN CONCILIACIÓN'` (resolución manual, FR-006)."""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            f"""
+            UPDATE candidate_documents
+            SET estado_conciliacion = 'CONCILIADA', movimiento_bancario_id = ?,
+                conciliado_con_extracto_id = ?
+            WHERE id = ? AND estado = 'PROCESADA' AND {_CONCILIABLE_DESDE}
+            """,
+            (movimiento_id, extracto_id, documento_id),
+        )
+    except sqlite3.IntegrityError as exc:
+        conn.rollback()
+        raise MovimientoYaVinculadoError(
+            f"El movimiento {movimiento_id} ya está vinculado a otra factura"
+        ) from exc
+    if cursor.rowcount == 0:
+        conn.rollback()
+        _raise_no_conciliable(documento_id)
+    conn.commit()
+    return get_by_id(documento_id)
+
+
+def mark_no_encontrada(documento_id: int, extracto_id: int) -> CandidateDocument:
+    """FR-004, FR-006: nunca 'impagada' — solo 'no encontrada en el extracto' (Principio VI).
+    Válido desde `estado_conciliacion IS NULL` o desde `'PENDIENTE REVISIÓN CONCILIACIÓN'`."""
+    conn = get_connection()
+    cursor = conn.execute(
+        f"""
+        UPDATE candidate_documents
+        SET estado_conciliacion = 'NO ENCONTRADA EN EXTRACTO', conciliado_con_extracto_id = ?
+        WHERE id = ? AND estado = 'PROCESADA' AND {_CONCILIABLE_DESDE}
+        """,
+        (extracto_id, documento_id),
+    )
+    if cursor.rowcount == 0:
+        conn.rollback()
+        _raise_no_conciliable(documento_id)
+    conn.commit()
+    return get_by_id(documento_id)
+
+
+def mark_pendiente_revision(documento_id: int, extracto_id: int) -> CandidateDocument:
+    """FR-005: varios candidatos igual de plausibles — nunca se elige automáticamente por uno."""
+    conn = get_connection()
+    cursor = conn.execute(
+        """
+        UPDATE candidate_documents
+        SET estado_conciliacion = 'PENDIENTE REVISIÓN CONCILIACIÓN', conciliado_con_extracto_id = ?
+        WHERE id = ? AND estado = 'PROCESADA' AND estado_conciliacion IS NULL
+        """,
+        (extracto_id, documento_id),
+    )
+    if cursor.rowcount == 0:
+        conn.rollback()
+        _raise_no_conciliable(documento_id)
+    conn.commit()
+    return get_by_id(documento_id)
 
 
 def reclassify(candidate_id: int, estado: str) -> CandidateDocument:

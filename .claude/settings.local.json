@@ -46,7 +46,15 @@
       "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_003\")",
       "Bash(mkdir -p \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/quickstart003_test\")",
       "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/quickstart003_test/test.db uv run python -c ' *)",
-      "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/quickstart003_test\")"
+      "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/quickstart003_test\")",
+      "Bash(mkdir -p \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004\")",
+      "Bash(cp data/invoice_manager.db \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004/test.db\")",
+      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004/test.db uv run python -c ' *)",
+      "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004\")",
+      "Bash(mkdir -p \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b\")",
+      "Bash(cp data/invoice_manager.db \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b/test.db\")",
+      "Bash(SQLITE_DB_PATH=C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b/test.db uv run python -c ' *)",
+      "Bash(rm -rf \"C:/Users/ismae/AppData/Local/Temp/claude/d--Antigravity-Viberano/8135c80f-44f8-493c-8bb3-d305e21037b9/scratchpad/migration_test_004b\")"
     ],
     "additionalDirectories": [
       "D:\\Antigravity\\Viberano\\app"

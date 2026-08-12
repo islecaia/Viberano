@@ -14,6 +14,12 @@ proyecto. Features implementadas hasta ahora:
 - [specs/003-sugerencia-datos-factura/](specs/003-sugerencia-datos-factura/) — precargar el
   formulario de validación con proveedor/fecha/número/total propuestos a partir del propio
   documento, siempre editables y sujetos a la misma confirmación humana explícita.
+- [specs/004-conciliacion-bancaria/](specs/004-conciliacion-bancaria/) — conciliación bancaria:
+  la persona autorizada aporta un extracto (CSV) para un periodo y el sistema compara cada
+  factura PROCESADA de ese periodo con los movimientos, marcando coincidencias inequívocas como
+  CONCILIADA, dejando en "NO ENCONTRADA EN EXTRACTO" las que no tienen coincidencia (nunca
+  "impagada") y en PENDIENTE REVISIÓN CONCILIACIÓN las ambiguas, que la persona resuelve
+  manualmente. También muestra los movimientos de gasto del extracto sin factura asociada.
 
 ## Requisitos
 
