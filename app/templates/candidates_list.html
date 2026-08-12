@@ -77,10 +77,14 @@
         const statusEl = document.getElementById("sync-status");
         statusEl.textContent = "Buscando correos nuevos...";
         const response = await fetch("/api/mailbox-accounts/{{ cuenta.id }}/sync", { method: "POST" });
+        const data = await response.json();
         if (response.ok) {
-          window.location.reload();
+          if (data.lote) {
+            window.location.reload();
+          } else {
+            statusEl.textContent = "No se han encontrado correos nuevos con posible factura.";
+          }
         } else {
-          const data = await response.json();
           statusEl.textContent = data.detail || "No se ha podido analizar el buzón";
         }
       });

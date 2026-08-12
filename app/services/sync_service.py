@@ -20,7 +20,6 @@ from app.models import sync_run as sync_run_model
 from app.models.ingested_email import IngestedEmail
 from app.models.sync_run import SyncRun
 from app.services import attachment_store, classification, secret_store
-from app.services.mailbox.base import MailboxConnectionError
 from app.services.mailbox_account_service import build_connector
 
 logger = logging.getLogger("invoice_manager")
@@ -42,10 +41,14 @@ class NadaQueEjecutarError(Exception):
     """El lote no tiene ningún correo `PENDIENTE`/`FALLIDO` que procesar (422)."""
 
 
-def analizar_lote(cuenta_id: int, persona_autorizada: str) -> SyncRun:
-    """FR-001 a FR-003, FR-005: lee el buzón, guarda cada correo nuevo y sus adjuntos candidatos
-    sin clasificarlos ni crear ningún `candidate_document`, y deja el lote `pendiente_aprobacion`
-    con su resumen (correos nuevos, correos con adjuntos candidatos)."""
+def analizar_lote(cuenta_id: int, persona_autorizada: str) -> SyncRun | None:
+    """FR-001 a FR-003, FR-005: lee el buzón y calcula en memoria qué correos nuevos hay y
+    cuáles tienen adjuntos candidatos, sin escribir nada en la base de datos todavía. Solo si
+    hay al menos un correo con adjunto candidato se crea el lote `pendiente_aprobacion` y se
+    persiste (correos + adjuntos); si el resultado es 0 correos con adjunto candidato (lo que
+    incluye el caso de 0 correos nuevos), no se crea ningún registro de lote y la cuenta queda
+    libre de inmediato para una nueva sincronización (no hay nada `pendiente_aprobacion`/
+    `en_curso` que la bloquee) — devuelve `None` en ese caso."""
     account = mailbox_account_model.get_by_id(cuenta_id)
     if account is None or account.persona_autorizada != persona_autorizada:
         raise CuentaNoDisponibleError("Cuenta no encontrada")
@@ -56,51 +59,77 @@ def analizar_lote(cuenta_id: int, persona_autorizada: str) -> SyncRun:
             "Ya hay un lote pendiente de aprobación o en ejecución para esta cuenta"
         )
 
+    credenciales = secret_store.retrieve(account.credenciales_ref)
+    connector = build_connector(account.proveedor, credenciales)
+    since = (
+        datetime.fromisoformat(account.ultima_sincronizacion_cursor)
+        if account.ultima_sincronizacion_cursor
+        else None
+    )
+
+    messages = connector.list_new_messages(since)
+    analizados = _analizar_mensajes(account.id, connector, messages)
+    correos_con_adjuntos = sum(1 for correo in analizados if correo["adjuntos"])
+
+    # El buzón ya se leyó hasta aquí independientemente de si hay algo que revisar — avanzar el
+    # cursor evita reanalizar los mismos correos sin adjunto en la siguiente sincronización.
+    mailbox_account_model.update_cursor(account.id, datetime.now(UTC).isoformat())
+
+    if correos_con_adjuntos == 0:
+        return None
+
     sync_run = sync_run_model.create_analisis(
         cuenta_id=cuenta_id, iniciada_por=persona_autorizada
     )
-
     try:
-        credenciales = secret_store.retrieve(account.credenciales_ref)
-        connector = build_connector(account.proveedor, credenciales)
-
-        since = (
-            datetime.fromisoformat(account.ultima_sincronizacion_cursor)
-            if account.ultima_sincronizacion_cursor
-            else None
-        )
-
-        messages = connector.list_new_messages(since)
-        correos_nuevos, correos_con_adjuntos = _guardar_correos_nuevos(
-            account.id, sync_run.id, connector, messages
-        )
-    except MailboxConnectionError as exc:
-        logger.warning("Análisis del lote %s interrumpido: %s", sync_run.id, exc)
-        sync_run_model.marcar_interrumpida(sync_run.id)
-        return sync_run_model.get_by_id(sync_run.id)
+        _persistir_correos_analizados(sync_run.id, account.id, analizados)
+        sync_run_model.guardar_resumen(sync_run.id, len(analizados), correos_con_adjuntos)
     except Exception:
         logger.exception(
-            "Análisis del lote %s interrumpido por un error inesperado", sync_run.id
+            "Análisis del lote %s interrumpido al guardar los datos", sync_run.id
         )
         sync_run_model.marcar_interrumpida(sync_run.id)
         raise
-
-    mailbox_account_model.update_cursor(account.id, datetime.now(UTC).isoformat())
-    sync_run_model.guardar_resumen(sync_run.id, correos_nuevos, correos_con_adjuntos)
     return sync_run_model.get_by_id(sync_run.id)
 
 
-def _guardar_correos_nuevos(
-    cuenta_id: int, sync_run_id: int, connector, messages
-) -> tuple[int, int]:
-    correos_nuevos = 0
-    correos_con_adjuntos = 0
+def _analizar_mensajes(cuenta_id: int, connector, messages) -> list[dict]:
+    """Solo lectura y cálculo en memoria (research.md): nada se escribe en la base de datos ni
+    en `attachment_store` todavía, para poder descartar el lote entero sin dejar rastro si
+    resulta que no tiene ningún adjunto candidato."""
+    analizados = []
     for message in messages:
-        # FR-009 (feature 001): un correo ya ingerido no genera ni fila ni adjunto nuevo.
+        # FR-009 (feature 001): un correo ya ingerido no se vuelve a analizar.
         if ingested_email_model.find_existing(cuenta_id, message.message_id) is not None:
             continue
 
-        correos_nuevos += 1
+        adjuntos = []
+        for attachment in message.attachments:
+            formato = classification.is_supported_format(attachment.content_type)
+            if formato is None:
+                continue  # FR-005 (feature 001): solo PDF/JPG/PNG son candidatos
+
+            content = attachment.content
+            if not content:
+                content = connector.get_attachment(
+                    message.message_id, attachment.attachment_id
+                ).content
+            adjuntos.append(
+                {
+                    "attachment_id": attachment.attachment_id,
+                    "filename": attachment.filename,
+                    "formato": formato,
+                    "content": content,
+                }
+            )
+
+        analizados.append({"message": message, "adjuntos": adjuntos})
+    return analizados
+
+
+def _persistir_correos_analizados(sync_run_id: int, cuenta_id: int, analizados: list[dict]) -> None:
+    for correo in analizados:
+        message = correo["message"]
         ingested = ingested_email_model.create(
             cuenta_id=cuenta_id,
             proveedor_message_id=message.message_id,
@@ -109,37 +138,20 @@ def _guardar_correos_nuevos(
             fecha_correo=message.fecha.isoformat(),
             primera_sincronizacion_id=sync_run_id,
         )
-
-        tiene_adjunto_candidato = False
-        for attachment in message.attachments:
-            formato = classification.is_supported_format(attachment.content_type)
-            if formato is None:
-                continue  # FR-005 (feature 001): solo PDF/JPG/PNG son candidatos
-
-            tiene_adjunto_candidato = True
-            content = attachment.content
-            if not content:
-                content = connector.get_attachment(
-                    message.message_id, attachment.attachment_id
-                ).content
-
+        for adjunto in correo["adjuntos"]:
             archivo_ref = attachment_store.save_attachment(
                 cuenta_id=cuenta_id,
                 message_id=message.message_id,
-                attachment_id=attachment.attachment_id,
-                content=content,
-                formato=formato,
+                attachment_id=adjunto["attachment_id"],
+                content=adjunto["content"],
+                formato=adjunto["formato"],
             )
             pending_attachment_model.create(
                 correo_id=ingested.id,
                 archivo_adjunto_ref=archivo_ref,
-                nombre_archivo_original=attachment.filename,
-                formato=formato,
+                nombre_archivo_original=adjunto["filename"],
+                formato=adjunto["formato"],
             )
-
-        if tiene_adjunto_candidato:
-            correos_con_adjuntos += 1
-    return correos_nuevos, correos_con_adjuntos
 
 
 def ejecutar_lote(sync_run_id: int, persona_autorizada: str) -> SyncRun:

@@ -8,28 +8,42 @@ anteriores).
 
 ## POST /api/mailbox-accounts/{id}/sync — ampliado (ahora "analizar")
 
-Ya no ejecuta la sincronización completa: analiza el buzón, guarda cada correo nuevo y sus
-adjuntos candidatos (sin clasificarlos) y deja el lote `pendiente_aprobacion` (User Story 1,
-FR-001 a FR-003).
+Ya no ejecuta la sincronización completa: analiza el buzón y, solo si encuentra al menos un
+correo con adjunto candidato, guarda esos correos y sus adjuntos (sin clasificarlos) y deja el
+lote `pendiente_aprobacion` (User Story 1, FR-001 a FR-003). Si el análisis no encuentra ningún
+correo con adjunto candidato, no se crea ningún registro de lote (FR-013) — la respuesta lo
+indica con `"lote": null`, y la cuenta queda libre de inmediato para una nueva sincronización.
 
-**Response `202 Accepted`**:
+**Response `202 Accepted`** — con lote:
 
 ```json
 {
-  "id": 5,
-  "estado": "pendiente_aprobacion",
-  "fecha_inicio": "2026-08-12T10:00:00Z",
-  "fecha_fin": null,
-  "correos_procesados": 0,
-  "candidatos_generados": 0,
-  "correos_nuevos_detectados": 12,
-  "correos_con_adjuntos_candidatos": 7
+  "lote": {
+    "id": 5,
+    "estado": "pendiente_aprobacion",
+    "fecha_inicio": "2026-08-12T10:00:00Z",
+    "fecha_fin": null,
+    "correos_procesados": 0,
+    "candidatos_generados": 0,
+    "correos_nuevos_detectados": 12,
+    "correos_con_adjuntos_candidatos": 7,
+    "correos_fallidos": []
+  }
 }
+```
+
+**Response `202 Accepted`** — sin nada que revisar (FR-013):
+
+```json
+{ "lote": null }
 ```
 
 **Errores**:
 - `409 Conflict`: ya existe un lote de esta cuenta `pendiente_aprobacion` o `en_curso` (FR-005).
 - `409 Conflict`: la cuenta no está conectada (sin cambios respecto a la feature 001).
+- `502 Bad Gateway`: fallo de conexión con el proveedor de correo durante el análisis — no se
+  crea ningún lote (igual que el caso de "nada que revisar", la cuenta queda libre para
+  reintentar de inmediato).
 
 ---
 

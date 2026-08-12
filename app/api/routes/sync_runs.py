@@ -13,6 +13,7 @@ from app.auth.session import get_current_user
 from app.models import ingested_email as ingested_email_model
 from app.models import sync_run as sync_run_model
 from app.models.sync_run import SyncRun
+from app.services.mailbox.base import MailboxConnectionError
 from app.services.sync_service import (
     CuentaNoDisponibleError,
     LoteNoEncontradoError,
@@ -45,6 +46,10 @@ class SyncRunResponse(BaseModel):
     correos_fallidos: list[CorreoFallidoRef] = []
 
 
+class AnalisisResponse(BaseModel):
+    lote: SyncRunResponse | None = None
+
+
 def _to_response(sync_run: SyncRun) -> SyncRunResponse:
     fallidos = [
         CorreoFallidoRef(
@@ -59,18 +64,25 @@ def _to_response(sync_run: SyncRun) -> SyncRunResponse:
 
 
 @mailbox_sync_router.post(
-    "/{account_id}/sync", status_code=status.HTTP_202_ACCEPTED, response_model=SyncRunResponse
+    "/{account_id}/sync", status_code=status.HTTP_202_ACCEPTED, response_model=AnalisisResponse
 )
 def trigger_analisis(
     account_id: int, persona_autorizada: str = Depends(get_current_user)
-) -> SyncRunResponse:
+) -> AnalisisResponse:
+    """`lote` es `null` cuando el análisis no encuentra ningún correo con adjunto candidato: en
+    ese caso no se crea ningún registro de lote y la cuenta queda libre de inmediato para una
+    nueva sincronización (sync_service.analizar_lote())."""
     try:
         sync_run = analizar_lote(cuenta_id=account_id, persona_autorizada=persona_autorizada)
     except SincronizacionEnCursoError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except CuentaNoDisponibleError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    return _to_response(sync_run)
+    except MailboxConnectionError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    if sync_run is None:
+        return AnalisisResponse(lote=None)
+    return AnalisisResponse(lote=_to_response(sync_run))
 
 
 @mailbox_sync_router.post(

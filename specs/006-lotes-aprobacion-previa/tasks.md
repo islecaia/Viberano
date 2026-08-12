@@ -115,6 +115,20 @@ reintentarlo y comprobar que pasa a `PROCESADO` (quickstart.md Escenarios 3 y 4)
 
 ---
 
+## Phase 7: Addendum — No crear lote cuando no hay nada que revisar (FR-013)
+
+**Purpose**: FR-013, añadido tras la implementación inicial a petición explícita del usuario — si
+el análisis no encuentra ningún correo con adjunto candidato, no debe quedar ningún registro de
+lote, y la cuenta debe quedar libre de inmediato para una nueva sincronización.
+
+- [X] T018 [US1] Refactorizar `analizar_lote()` en app/services/sync_service.py: separar el análisis (lectura de IMAP + cálculo en memoria, función nueva `_analizar_mensajes()`) de la persistencia (`_persistir_correos_analizados()`, nueva); solo crear el `sync_run` y guardar correos/adjuntos si `correos_con_adjuntos_candidatos > 0`; devolver `None` en caso contrario; el cursor de la cuenta avanza siempre, haya o no lote (FR-013, research.md) — verificado en proceso: 0 filas en `sync_runs`/`ingested_emails` cuando no hay adjuntos candidatos, cursor avanzado, cuenta libre para una nueva sincronización inmediata (sin `SincronizacionEnCursoError`)
+- [X] T019 [US1] Actualizar app/api/routes/sync_runs.py: `POST .../sync` devuelve ahora `AnalisisResponse { lote: SyncRunResponse | null }`; capturar `MailboxConnectionError` (ya no se traga dentro de `analizar_lote()` al no existir un `sync_run` que marcar `interrumpida`) y mapearlo a `502 Bad Gateway` (depende de T018) — verificado en proceso: `{"lote": null}` cuando no hay nada que revisar, `502` ante un fallo de conexión
+- [X] T020 [US1] Actualizar app/templates/candidates_list.html: el botón "Sincronizar" interpreta `data.lote` de la respuesta — si es `null`, muestra "No se han encontrado correos nuevos con posible factura" sin recargar; si trae un lote, recarga como antes (depende de T019) — verificado manualmente contra el nuevo formato de respuesta
+
+**Checkpoint**: un análisis sin nada que aprobar no deja ningún rastro en `sync_runs` y no bloquea la siguiente sincronización.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

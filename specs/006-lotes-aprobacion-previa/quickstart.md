@@ -44,6 +44,14 @@ Requiere una cuenta de correo conectada (feature 001) con correos nuevos disponi
    de nuevo para la misma cuenta.
 2. **Resultado esperado**: `409 Conflict`.
 
+## Escenario 6 — Sin correos con posible factura, no se crea ningún lote (FR-013)
+
+1. Sin ningún lote pendiente para la cuenta, `POST /api/mailbox-accounts/{id}/sync` cuando el
+   buzón no tiene correos nuevos, o tiene correos nuevos pero ninguno con adjunto PDF/JPG/PNG.
+2. **Resultado esperado**: `202 Accepted`, `{"lote": null}`; no se crea ninguna fila en
+   `sync_runs`. Repetir inmediatamente el mismo `POST .../sync` **no** devuelve `409 Conflict`
+   (la cuenta sigue libre, a diferencia del Escenario 5).
+
 ## Validación de principios no negociables
 
 - **Principio V**: analizar y ejecutar (aprobar/reanudar/reintentar) son siempre acciones

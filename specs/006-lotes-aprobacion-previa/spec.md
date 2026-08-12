@@ -99,6 +99,10 @@ fallido queda visible con su motivo y disponible para reintentar.
 - ¿Qué ocurre si la cuenta se desconecta mientras hay un lote pendiente de aprobación o en
   ejecución? → El lote pendiente o en curso queda con su estado tal cual; no se aprueba ni se
   ejecuta automáticamente al reconectar la cuenta.
+- ¿Qué ocurre si el análisis no encuentra ningún correo con posible factura adjunta (ni correos
+  nuevos en absoluto, ni correos nuevos sin ningún adjunto candidato)? → No se crea ningún
+  registro de lote — no hay nada que la persona autorizada necesite aprobar o descartar — y la
+  cuenta queda libre de inmediato para una nueva sincronización, sin esperar ninguna acción.
 
 ## Requirements *(mandatory)*
 
@@ -132,13 +136,18 @@ fallido queda visible con su motivo y disponible para reintentar.
 - **FR-012**: El sistema DEBE iniciar el análisis, la aprobación y el reintento de cada lote
   únicamente por acción explícita de la persona autorizada, nunca de forma programada o
   automática.
+- **FR-013**: El sistema NO DEBE crear ningún registro de lote cuando el análisis no encuentra
+  ningún correo con al menos un adjunto candidato; en ese caso la cuenta DEBE quedar libre de
+  inmediato para una nueva sincronización, sin ningún lote pendiente que la bloquee.
 
 ### Key Entities
 
 - **Lote de Sincronización**: ampliación de la Sincronización ya existente (feature 001). Añade
   un estado "pendiente de aprobación" previo a su ejecución, con el resumen calculado (correos
   nuevos, correos con adjuntos candidatos); conserva alcance, inicio, fin, correos procesados,
-  candidatos generados y errores una vez ejecutado.
+  candidatos generados y errores una vez ejecutado. Solo llega a existir como registro cuando el
+  resumen tiene al menos un correo con adjunto candidato (FR-013) — un análisis sin nada que
+  aprobar no deja rastro.
 - **Correo Fallido**: referencia a un correo dentro de un lote cuyo procesamiento no se completó;
   conserva el motivo del fallo y si ya se ha reintentado.
 
