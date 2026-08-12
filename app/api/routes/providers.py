@@ -24,6 +24,7 @@ class CreateProviderRequest(BaseModel):
 class UpdateProviderRequest(BaseModel):
     activo: bool | None = None
     identificador_fiscal: str | None = None
+    nombre: str | None = None
 
 
 class ProviderListResponse(BaseModel):
@@ -72,6 +73,14 @@ def update_provider(
         )
     campos_enviados = payload.model_fields_set
     provider = None
+    if "nombre" in campos_enviados and payload.nombre and payload.nombre.strip():
+        existente = provider_model.get_by_nombre_normalizado(payload.nombre)
+        if existente is not None and existente.id != provider_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Ya existe un proveedor con el nombre '{payload.nombre}'",
+            )
+        provider = provider_model.set_nombre(provider_id, payload.nombre.strip())
     if "activo" in campos_enviados and payload.activo is not None:
         provider = provider_model.set_activo(provider_id, payload.activo)
     if "identificador_fiscal" in campos_enviados:

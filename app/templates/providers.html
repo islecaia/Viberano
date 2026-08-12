@@ -14,17 +14,29 @@
 
   {% for proveedor in proveedores %}
     <div class="card">
-      <p><strong>{{ proveedor.nombre }}</strong></p>
-      <p class="status {{ 'conectada' if proveedor.activo else 'desconectada' }}">{{ 'Activo' if proveedor.activo else 'Inactivo' }}</p>
+      <div class="provider-view" id="view-{{ proveedor.id }}">
+        <p><strong>{{ proveedor.nombre }}</strong></p>
+        <p>{{ proveedor.identificador_fiscal or 'Sin NIF' }}</p>
+        <p class="status {{ 'conectada' if proveedor.activo else 'desconectada' }}">{{ 'Activo' if proveedor.activo else 'Inactivo' }}</p>
+        <div class="button-row">
+          <button type="button" class="edit-button" data-id="{{ proveedor.id }}">Editar</button>
+          <button type="button" class="toggle-activo" data-id="{{ proveedor.id }}" data-activo="{{ 'true' if proveedor.activo else 'false' }}">
+            {{ 'Desactivar' if proveedor.activo else 'Activar' }}
+          </button>
+        </div>
+      </div>
 
-      <label for="nif-{{ proveedor.id }}">NIF</label>
-      <input id="nif-{{ proveedor.id }}" type="text" class="nif-input" value="{{ proveedor.identificador_fiscal or '' }}" placeholder="Sin NIF" />
-      <button type="button" class="save-nif" data-id="{{ proveedor.id }}" style="margin-bottom:12px;">Guardar NIF</button>
-      <p class="nif-error status desconectada" data-id="{{ proveedor.id }}" style="display:none"></p>
-
-      <button type="button" class="toggle-activo" data-id="{{ proveedor.id }}" data-activo="{{ 'true' if proveedor.activo else 'false' }}">
-        {{ 'Desactivar' if proveedor.activo else 'Activar' }}
-      </button>
+      <div class="provider-edit" id="edit-{{ proveedor.id }}" style="display:none">
+        <label for="nombre-{{ proveedor.id }}">Nombre</label>
+        <input id="nombre-{{ proveedor.id }}" type="text" value="{{ proveedor.nombre }}" />
+        <label for="nif-{{ proveedor.id }}">NIF</label>
+        <input id="nif-{{ proveedor.id }}" type="text" value="{{ proveedor.identificador_fiscal or '' }}" placeholder="Sin NIF" />
+        <div class="button-row">
+          <button type="button" class="save-edit" data-id="{{ proveedor.id }}">Guardar</button>
+          <button type="button" class="cancel-edit secondary" data-id="{{ proveedor.id }}">Cancelar</button>
+        </div>
+        <p class="edit-error status desconectada" data-id="{{ proveedor.id }}" style="display:none"></p>
+      </div>
     </div>
   {% else %}
     <div class="card"><p>Todavía no hay proveedores. Añade el primero arriba.</p></div>
@@ -64,22 +76,44 @@
       });
     });
 
-    document.querySelectorAll(".save-nif").forEach((button) => {
+    document.querySelectorAll(".edit-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.id;
+        document.getElementById(`view-${id}`).style.display = "none";
+        document.getElementById(`edit-${id}`).style.display = "block";
+      });
+    });
+
+    document.querySelectorAll(".cancel-edit").forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.id;
+        document.getElementById(`edit-${id}`).style.display = "none";
+        document.getElementById(`view-${id}`).style.display = "block";
+      });
+    });
+
+    document.querySelectorAll(".save-edit").forEach((button) => {
       button.addEventListener("click", async () => {
         const id = button.dataset.id;
-        const errorEl = document.querySelector(`.nif-error[data-id="${id}"]`);
+        const errorEl = document.querySelector(`.edit-error[data-id="${id}"]`);
         errorEl.style.display = "none";
+        const nombre = document.getElementById(`nombre-${id}`).value.trim();
         const nif = document.getElementById(`nif-${id}`).value.trim();
+        if (!nombre) {
+          errorEl.textContent = "El nombre no puede estar vacío";
+          errorEl.style.display = "block";
+          return;
+        }
         const response = await fetch(`/api/providers/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identificador_fiscal: nif || null }),
+          body: JSON.stringify({ nombre, identificador_fiscal: nif || null }),
         });
         if (response.ok) {
           window.location.reload();
         } else {
           const data = await response.json();
-          errorEl.textContent = data.detail || "No se ha podido guardar el NIF";
+          errorEl.textContent = data.detail || "No se ha podido guardar el proveedor";
           errorEl.style.display = "block";
         }
       });

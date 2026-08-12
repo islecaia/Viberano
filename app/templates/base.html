@@ -72,6 +72,9 @@
       cursor: pointer;
       width: 100%;
     }
+    .button-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .button-row button { width: auto; flex: 1; }
+    .button-row button.secondary { background: var(--surface-muted); color: var(--text-primary); border: 1px solid var(--border); }
     .status { font-weight: 600; font-size: 0.9rem; }
     .status.conectada { color: #1E9E5A; }
     .status.desconectada, .status.requiere_reautorizacion { color: #C4451C; }
