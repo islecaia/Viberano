@@ -30,7 +30,9 @@ def _validar_fecha(fecha_factura: str) -> None:
 
 
 def _resolver_proveedor(
-    proveedor_id: int | None, proveedor_nombre_nuevo: str | None
+    proveedor_id: int | None,
+    proveedor_nombre_nuevo: str | None,
+    proveedor_nif_nuevo: str | None = None,
 ) -> provider_model.Provider:
     if proveedor_id is not None:
         proveedor = provider_model.get_by_id(proveedor_id)
@@ -41,7 +43,8 @@ def _resolver_proveedor(
         existente = provider_model.get_by_nombre_normalizado(proveedor_nombre_nuevo)
         if existente is not None:
             return existente
-        return provider_model.create(proveedor_nombre_nuevo.strip())
+        nif = proveedor_nif_nuevo.strip() if proveedor_nif_nuevo else None
+        return provider_model.create(proveedor_nombre_nuevo.strip(), nif or None)
     raise CampoInvalidoError("Debe indicarse proveedor_id o proveedor_nombre_nuevo")
 
 
@@ -54,6 +57,7 @@ def validate_and_archive(
     validado_por: str,
     proveedor_id: int | None = None,
     proveedor_nombre_nuevo: str | None = None,
+    proveedor_nif_nuevo: str | None = None,
 ) -> candidate_document_model.CandidateDocument:
     if not fecha_factura:
         raise CampoInvalidoError("fecha_factura es obligatoria")
@@ -70,7 +74,7 @@ def validate_and_archive(
             "total negativo solo es válido si es_nota_credito es true (edge case de spec.md)"
         )
 
-    proveedor = _resolver_proveedor(proveedor_id, proveedor_nombre_nuevo)
+    proveedor = _resolver_proveedor(proveedor_id, proveedor_nombre_nuevo, proveedor_nif_nuevo)
     if not proveedor.activo:
         raise ProveedorInactivoError(proveedor.id)
 

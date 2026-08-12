@@ -40,10 +40,14 @@
         {% endfor %}
         <option value="__nuevo__" {{ 'selected' if candidato.sugerido_proveedor_nombre and not candidato.sugerido_proveedor_id_coincidente else '' }}>+ Proveedor nuevo…</option>
       </select>
+      {% set mostrar_nuevo = candidato.sugerido_proveedor_nombre and not candidato.sugerido_proveedor_id_coincidente %}
       <input id="proveedor_nombre_nuevo" type="text" placeholder="Nombre del proveedor nuevo"
              value="{{ candidato.sugerido_proveedor_nombre or '' }}"
-             class="{{ 'suggested' if candidato.sugerido_proveedor_nombre else '' }}"
-             style="{{ 'display:block' if (candidato.sugerido_proveedor_nombre and not candidato.sugerido_proveedor_id_coincidente) else 'display:none' }}" />
+             class="proveedor-nuevo-campo {{ 'suggested' if candidato.sugerido_proveedor_nombre else '' }}"
+             style="{{ 'display:block' if mostrar_nuevo else 'display:none' }}" />
+      <input id="proveedor_nif_nuevo" type="text" placeholder="NIF del proveedor nuevo (opcional)"
+             class="proveedor-nuevo-campo"
+             style="{{ 'display:block' if mostrar_nuevo else 'display:none' }}" />
 
       <label for="fecha_factura">Fecha de factura</label>
       <input id="fecha_factura" type="date" required
@@ -78,8 +82,10 @@
     const proveedorSelect = document.getElementById("proveedor_id");
     if (proveedorSelect) {
       proveedorSelect.addEventListener("change", () => {
-        const nuevoInput = document.getElementById("proveedor_nombre_nuevo");
-        nuevoInput.style.display = proveedorSelect.value === "__nuevo__" ? "block" : "none";
+        const display = proveedorSelect.value === "__nuevo__" ? "block" : "none";
+        document.querySelectorAll(".proveedor-nuevo-campo").forEach((el) => {
+          el.style.display = display;
+        });
       });
     }
 
@@ -99,6 +105,7 @@
         };
         if (proveedorValue === "__nuevo__") {
           payload.proveedor_nombre_nuevo = document.getElementById("proveedor_nombre_nuevo").value;
+          payload.proveedor_nif_nuevo = document.getElementById("proveedor_nif_nuevo").value || null;
         } else if (proveedorValue) {
           payload.proveedor_id = Number(proveedorValue);
         }

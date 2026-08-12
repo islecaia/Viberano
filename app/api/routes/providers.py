@@ -22,7 +22,8 @@ class CreateProviderRequest(BaseModel):
 
 
 class UpdateProviderRequest(BaseModel):
-    activo: bool
+    activo: bool | None = None
+    identificador_fiscal: str | None = None
 
 
 class ProviderListResponse(BaseModel):
@@ -69,5 +70,14 @@ def update_provider(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Proveedor no encontrado"
         )
-    provider = provider_model.set_activo(provider_id, payload.activo)
+    campos_enviados = payload.model_fields_set
+    provider = None
+    if "activo" in campos_enviados and payload.activo is not None:
+        provider = provider_model.set_activo(provider_id, payload.activo)
+    if "identificador_fiscal" in campos_enviados:
+        provider = provider_model.set_identificador_fiscal(
+            provider_id, payload.identificador_fiscal
+        )
+    if provider is None:
+        provider = provider_model.get_by_id(provider_id)
     return _to_response(provider)

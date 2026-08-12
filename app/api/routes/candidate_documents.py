@@ -76,6 +76,7 @@ class ValidateRequest(BaseModel):
     es_nota_credito: bool = False
     proveedor_id: int | None = None
     proveedor_nombre_nuevo: str | None = None
+    proveedor_nif_nuevo: str | None = None
 
 
 class ReclassifyRequest(BaseModel):
@@ -193,6 +194,7 @@ def validate_candidate(
             validado_por=persona_autorizada,
             proveedor_id=payload.proveedor_id,
             proveedor_nombre_nuevo=payload.proveedor_nombre_nuevo,
+            proveedor_nif_nuevo=payload.proveedor_nif_nuevo,
         )
     except CampoInvalidoError as exc:
         raise HTTPException(

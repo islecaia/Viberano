@@ -75,3 +75,13 @@ def set_activo(provider_id: int, activo: bool) -> Provider | None:
     conn.execute("UPDATE providers SET activo = ? WHERE id = ?", (int(activo), provider_id))
     conn.commit()
     return get_by_id(provider_id)
+
+
+def set_identificador_fiscal(provider_id: int, identificador_fiscal: str | None) -> Provider | None:
+    conn = get_connection()
+    conn.execute(
+        "UPDATE providers SET identificador_fiscal = ? WHERE id = ?",
+        (identificador_fiscal, provider_id),
+    )
+    conn.commit()
+    return get_by_id(provider_id)
