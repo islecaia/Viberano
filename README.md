@@ -20,6 +20,11 @@ proyecto. Features implementadas hasta ahora:
   CONCILIADA, dejando en "NO ENCONTRADA EN EXTRACTO" las que no tienen coincidencia (nunca
   "impagada") y en PENDIENTE REVISIÓN CONCILIACIÓN las ambiguas, que la persona resuelve
   manualmente. También muestra los movimientos de gasto del extracto sin factura asociada.
+- [specs/005-volumen-mensual-facturas/](specs/005-volumen-mensual-facturas/) — volumen mensual de
+  facturas: en la pestaña Actividad, la persona autorizada consulta cuántas facturas PROCESADA se
+  archivaron cada mes de un periodo (por fecha de emisión), y la media del periodo, distinguiendo
+  la media de meses completos de la que incluye un mes parcial (el mes en curso, o el primer mes
+  de la cuenta conectada si empezó a mitad de mes). Consulta de solo lectura.
 
 ## Requisitos
 

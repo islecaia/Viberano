@@ -175,6 +175,24 @@ def list_by_extracto(extracto_id: int, estado_conciliacion: str) -> list[Candida
     return [CandidateDocument._from_row(row) for row in rows]
 
 
+def count_procesada_por_mes(fecha_inicio: str, fecha_fin: str) -> list[dict]:
+    """FR-002/FR-003/FR-004 de specs/005-volumen-mensual-facturas/: recuento de facturas
+    PROCESADA agrupado por año-mes de `fecha_factura`, dentro de `[fecha_inicio, fecha_fin]`
+    (formato `YYYY-MM-DD`). Solo devuelve meses con al menos una factura — el mes en 0 lo
+    completa metrics_service (FR-005)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT strftime('%Y-%m', fecha_factura) AS mes, COUNT(*) AS total
+        FROM candidate_documents
+        WHERE estado = 'PROCESADA' AND fecha_factura BETWEEN ? AND ?
+        GROUP BY mes
+        """,
+        (fecha_inicio, fecha_fin),
+    ).fetchall()
+    return [{"mes": row["mes"], "total": row["total"]} for row in rows]
+
+
 def list_all(estado: str | None = None) -> list[CandidateDocument]:
     conn = get_connection()
     if estado:

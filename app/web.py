@@ -11,6 +11,7 @@ from app.models import candidate_document as candidate_document_model
 from app.models import mailbox_account as mailbox_account_model
 from app.models import provider as provider_model
 from app.models import reconciliation_candidate as reconciliation_candidate_model
+from app.services import metrics_service
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -142,17 +143,6 @@ def factura_detail_page(request: Request, candidate_id: int):
     )
 
 
-def _placeholder_page(request: Request, active_tab: str, titulo: str, descripcion: str = ""):
-    persona = _current_user_or_none(request)
-    if persona is None:
-        return RedirectResponse(url="/login")
-    return templates.TemplateResponse(
-        request,
-        "placeholder.html",
-        {"active_tab": active_tab, "titulo": titulo, "descripcion": descripcion},
-    )
-
-
 @router.get("/proveedores", response_class=HTMLResponse)
 def proveedores_page(request: Request):
     persona = _current_user_or_none(request)
@@ -204,10 +194,29 @@ def conciliacion_detail_page(request: Request, reconciliation_id: int):
 
 
 @router.get("/actividad", response_class=HTMLResponse)
-def actividad_page(request: Request):
-    return _placeholder_page(
+def actividad_page(request: Request, desde: str | None = None, hasta: str | None = None):
+    persona = _current_user_or_none(request)
+    if persona is None:
+        return RedirectResponse(url="/login")
+    try:
+        desde_final, hasta_final = metrics_service.resolver_periodo(desde, hasta)
+    except metrics_service.PeriodoInvalidoError:
+        desde_final, hasta_final = metrics_service.resolver_periodo(None, None)
+    cuenta = mailbox_account_model.get_for_persona(persona)
+    resultado = metrics_service.volumen_mensual(
+        desde_final,
+        hasta_final,
+        fecha_conexion_cuenta=cuenta.fecha_conexion if cuenta else None,
+    )
+    return templates.TemplateResponse(
         request,
-        "actividad",
-        "Actividad",
-        "Historial de sincronizaciones y acciones sobre tus facturas",
+        "activity.html",
+        {
+            "active_tab": "actividad",
+            "desde": resultado["desde"],
+            "hasta": resultado["hasta"],
+            "meses": resultado["meses"],
+            "media_meses_completos": resultado["media_meses_completos"],
+            "media_con_mes_parcial": resultado["media_con_mes_parcial"],
+        },
     )

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Actividad · Invoice Manager{% endblock %}
+{% block content %}
+  <h1>Actividad</h1>
+  <p class="page-subtitle">Volumen mensual de facturas archivadas</p>
+
+  <form id="periodo-form" class="card">
+    <label for="desde">Desde</label>
+    <input id="desde" type="month" value="{{ desde }}" required />
+    <label for="hasta">Hasta</label>
+    <input id="hasta" type="month" value="{{ hasta }}" required />
+    <button type="submit">Actualizar</button>
+  </form>
+
+  {% if meses %}
+    {% set hay_mes_parcial = meses | selectattr('completo', 'equalto', false) | list | length > 0 %}
+    <div class="card">
+      <p><strong>Media del periodo</strong></p>
+      {% if hay_mes_parcial %}
+        <p>Meses completos: <strong>{{ '%.1f'|format(media_meses_completos) if media_meses_completos is not none else '—' }}</strong> facturas/mes</p>
+        <p>Incluyendo el mes parcial: <strong>{{ '%.1f'|format(media_con_mes_parcial) if media_con_mes_parcial is not none else '—' }}</strong> facturas/mes</p>
+      {% else %}
+        <p><strong>{{ '%.1f'|format(media_con_mes_parcial) if media_con_mes_parcial is not none else '—' }}</strong> facturas/mes</p>
+      {% endif %}
+    </div>
+
+    {% for mes in meses %}
+      <div class="card">
+        <p><strong>{{ mes.mes }}</strong>{% if not mes.completo %} <span class="suggested-badge">mes parcial</span>{% endif %}</p>
+        <p>{{ mes.total }} factura{{ 's' if mes.total != 1 else '' }} archivada{{ 's' if mes.total != 1 else '' }}</p>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <script>
+    document.getElementById("periodo-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const desde = document.getElementById("desde").value;
+      const hasta = document.getElementById("hasta").value;
+      window.location.href = `/actividad?desde=${desde}&hasta=${hasta}`;
+    });
+  </script>
+{% endblock %}
