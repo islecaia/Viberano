@@ -34,6 +34,10 @@ primera queda conciliada y la segunda queda como "no encontrada en el extracto".
    la conciliación, **Then** esa factura no se evalúa ni cambia de estado.
 4. **Given** un extracto ya aportado y procesado antes, **When** se vuelve a aportar el mismo
    extracto, **Then** no se duplican vínculos ya confirmados en la conciliación anterior.
+5. **Given** una factura con un `estado_conciliacion` evaluado (conciliada, no encontrada en el
+   extracto, o pendiente de revisión manual), **When** la persona autorizada consulta la lista
+   general de facturas, **Then** ve un indicador visual de ese estado sin necesidad de abrir el
+   detalle de cada factura una por una.
 
 ---
 
@@ -126,6 +130,10 @@ procesar la conciliación.
   incompletos, sin marcar ninguna factura, indicando el motivo del rechazo.
 - **FR-012**: El sistema NO DEBE evaluar facturas fuera del periodo cubierto por el extracto
   aportado.
+- **FR-013**: El sistema DEBE mostrar, en la lista general de facturas, un indicador visual del
+  `estado_conciliacion` de cada factura PROCESADA que ya haya sido evaluada (conciliada, no
+  encontrada en el extracto, o pendiente de revisión manual), sin exigir abrir el detalle para
+  conocerlo.
 
 ### Key Entities
 

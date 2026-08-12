@@ -23,6 +23,13 @@
             <p><strong>{{ item.asunto }}</strong></p>
             <p>{{ item.remitente }} · {{ item.fecha_correo }}</p>
             <p class="status {{ 'conectada' if item.estado == 'REVISIÓN MANUAL' else 'desconectada' }}">{{ item.estado }}</p>
+            {% if item.estado_conciliacion == 'CONCILIADA' %}
+              <span class="badge-conciliacion conciliada">Conciliada</span>
+            {% elif item.estado_conciliacion == 'NO ENCONTRADA EN EXTRACTO' %}
+              <span class="badge-conciliacion no-encontrada">No encontrada en extracto</span>
+            {% elif item.estado_conciliacion == 'PENDIENTE REVISIÓN CONCILIACIÓN' %}
+              <span class="badge-conciliacion pendiente">Pendiente revisión conciliación</span>
+            {% endif %}
           </div>
         </a>
       {% endfor %}

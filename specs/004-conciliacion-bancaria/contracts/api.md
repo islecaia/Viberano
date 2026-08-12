@@ -101,6 +101,22 @@ ningún extracto que lo cubra.
 
 ---
 
+## GET /api/candidate-documents — ampliado
+
+Se añade `estado_conciliacion` a cada elemento de la lista existente (FR-013), con el mismo
+significado y los mismos valores posibles que en el detalle:
+
+```json
+{
+  "items": [
+    { "...": "campos existentes de las features anteriores", "estado_conciliacion": "CONCILIADA" }
+  ],
+  "total": 1
+}
+```
+
+---
+
 ## Sin cambios
 
 Ningún endpoint de las features 001-003 cambia su comportamiento. Esta feature no toca la

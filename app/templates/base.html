@@ -86,6 +86,17 @@
     .status { font-weight: 600; font-size: 0.9rem; }
     .status.conectada { color: #1E9E5A; }
     .status.desconectada, .status.requiere_reautorizacion { color: #C4451C; }
+    .badge-conciliacion {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 1px 6px;
+      margin-top: 4px;
+    }
+    .badge-conciliacion.conciliada { color: #1E9E5A; background: #E6F6ED; }
+    .badge-conciliacion.no-encontrada,
+    .badge-conciliacion.pendiente { color: #C4451C; background: #FBEAE3; }
     nav.bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;

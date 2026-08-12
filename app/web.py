@@ -54,6 +54,7 @@ def facturas_page(request: Request):
                 "asunto": entry.correo_asunto,
                 "remitente": entry.correo_remitente,
                 "fecha_correo": entry.correo_fecha,
+                "estado_conciliacion": entry.documento.estado_conciliacion,
             }
             for entry in candidate_document_model.list_with_email()
         ]

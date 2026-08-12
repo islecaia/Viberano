@@ -116,6 +116,17 @@ correspondiente y un ingreso; comprobar que el cargo aparece en
 
 ---
 
+## Phase 7: Addendum — Indicador de conciliación en la lista de Facturas (FR-013)
+
+**Purpose**: FR-013, añadido tras la implementación inicial (spec.md, User Story 1, Acceptance
+Scenario 5) — la persona autorizada debe ver el `estado_conciliacion` de cada factura en la lista
+general, no solo en el detalle.
+
+- [X] T020 [US1] Incluir `estado_conciliacion` en `CandidateListItem`/`_to_list_item()` de app/api/routes/candidate_documents.py, según contracts/api.md § GET /api/candidate-documents — ampliado (depende de T009) — verificado en proceso: `list_candidates()` devuelve `estado_conciliacion` para un documento CONCILIADA; ruff limpio
+- [X] T021 [US1] Mostrar un indicador visual del `estado_conciliacion` (cuando no sea `null`) en cada tarjeta de app/templates/candidates_list.html y pasar el campo desde app/web.py (depende de T020) — badge `.badge-conciliacion` (verde=CONCILIADA, naranja=NO ENCONTRADA/PENDIENTE) añadido en app/templates/candidates_list.html y app/web.py; ruff limpio
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

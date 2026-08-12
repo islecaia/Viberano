@@ -33,6 +33,7 @@ class CandidateListItem(BaseModel):
     fecha_correo: str
     formato: str
     nombre_archivo_original: str
+    estado_conciliacion: str | None = None
 
 
 class CandidateListResponse(BaseModel):
@@ -120,6 +121,7 @@ def _to_list_item(entry) -> CandidateListItem:
         fecha_correo=entry.correo_fecha,
         formato=doc.formato,
         nombre_archivo_original=doc.nombre_archivo_original,
+        estado_conciliacion=doc.estado_conciliacion,
     )
 
 
