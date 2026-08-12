@@ -52,11 +52,16 @@ def get_by_id(provider_id: int) -> Provider | None:
 
 
 def get_by_nombre_normalizado(nombre: str) -> Provider | None:
+    """Revisión de código: la comparación se hace en Python con `_normalizar()` (colapsa
+    también espacios internos), no con `lower(trim(nombre))` en SQL — ese SQL solo recorta los
+    extremos, así que "Acme Corp" y "Acme  Corp" (doble espacio interno) habrían pasado por
+    proveedores distintos pese a que `_normalizar()` los trata como el mismo nombre."""
+    objetivo = _normalizar(nombre)
     conn = get_connection()
-    row = conn.execute(
-        "SELECT * FROM providers WHERE lower(trim(nombre)) = ?", (_normalizar(nombre),)
-    ).fetchone()
-    return Provider._from_row(row) if row else None
+    for row in conn.execute("SELECT * FROM providers"):
+        if _normalizar(row["nombre"]) == objetivo:
+            return Provider._from_row(row)
+    return None
 
 
 def list_all(activo: bool | None = None) -> list[Provider]:

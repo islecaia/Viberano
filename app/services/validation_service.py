@@ -69,6 +69,10 @@ def validate_and_archive(
 
     if not isinstance(total, int | float):
         raise CampoInvalidoError("total debe ser numérico")
+    if total == 0:
+        raise CampoInvalidoError(
+            "total no puede ser cero (spec.md raíz FR-010: superior a cero para archivo automático)"
+        )
     if total < 0 and not es_nota_credito:
         raise CampoInvalidoError(
             "total negativo solo es válido si es_nota_credito es true (edge case de spec.md)"

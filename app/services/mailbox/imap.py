@@ -1,6 +1,7 @@
 """ImapConnector: implementa MailboxConnector sobre un buzón IMAP genérico (research.md §1)."""
 
 import email
+import hashlib
 import imaplib
 from datetime import datetime, timedelta
 from email.header import decode_header
@@ -75,13 +76,21 @@ class ImapConnector(MailboxConnector):
                     continue
                 raw = msg_data[0][1]
                 parsed = email.message_from_bytes(raw)
-                messages.append(self._to_email_message(parsed))
+                messages.append(self._to_email_message(parsed, raw))
             return messages
         finally:
             conn.logout()
 
-    def _to_email_message(self, parsed: Message) -> EmailMessage:
+    def _to_email_message(self, parsed: Message, raw: bytes) -> EmailMessage:
         message_id = parsed.get("Message-ID", "").strip()
+        if not message_id:
+            # Revisión de código: sin cabecera Message-ID (correos mal formados o reenviados),
+            # todos colisionarían en find_existing() con "" como si fueran el mismo correo,
+            # descartando en silencio cualquier correo distinto que llegue después del primero.
+            # Se deriva un identificador estable a partir del contenido crudo del mensaje: el
+            # mismo correo reprocesado produce el mismo id (dedup real sigue funcionando), pero
+            # dos correos distintos ya no colisionan.
+            message_id = f"sha256:{hashlib.sha256(raw).hexdigest()}"
         remitente = _decode(parsed.get("From", ""))
         asunto = _decode(parsed.get("Subject", ""))
         fecha = parsedate_to_datetime(parsed.get("Date")) if parsed.get("Date") else datetime.now()
