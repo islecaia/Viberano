@@ -47,6 +47,7 @@
     label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.9rem; }
     input, select {
       width: 100%;
+      min-width: 0;
       padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -81,6 +82,8 @@
       cursor: pointer;
       width: 100%;
     }
+    .month-select-row { display: flex; gap: 8px; }
+    .month-select-row select { flex: 1; width: auto; min-width: 0; }
     .button-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .button-row button { width: auto; flex: 1; }
     .button-row button.secondary { background: var(--surface-muted); color: var(--text-primary); border: 1px solid var(--border); }

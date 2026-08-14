@@ -1,5 +1,7 @@
 """Páginas HTML server-rendered (fuera de /api/): no exigen sesión vía 401 JSON, sino redirect."""
 
+from datetime import date
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -230,6 +232,9 @@ def actividad_page(request: Request, desde: str | None = None, hasta: str | None
         hasta_final,
         fecha_conexion_cuenta=cuenta.fecha_conexion if cuenta else None,
     )
+    anio_actual = date.today().year
+    anio_min = min(int(resultado["desde"][:4]), anio_actual - 5)
+    anio_max = max(int(resultado["hasta"][:4]), anio_actual + 1)
     return templates.TemplateResponse(
         request,
         "activity.html",
@@ -240,5 +245,6 @@ def actividad_page(request: Request, desde: str | None = None, hasta: str | None
             "meses": resultado["meses"],
             "media_meses_completos": resultado["media_meses_completos"],
             "media_con_mes_parcial": resultado["media_con_mes_parcial"],
+            "anios": list(range(anio_min, anio_max + 1)),
         },
     )

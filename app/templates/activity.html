@@ -4,11 +4,38 @@
   <h1>Actividad</h1>
   <p class="page-subtitle">Volumen mensual de facturas archivadas</p>
 
+  {% set meses_nombres = [
+    ("01", "Enero"), ("02", "Febrero"), ("03", "Marzo"), ("04", "Abril"),
+    ("05", "Mayo"), ("06", "Junio"), ("07", "Julio"), ("08", "Agosto"),
+    ("09", "Septiembre"), ("10", "Octubre"), ("11", "Noviembre"), ("12", "Diciembre")
+  ] %}
   <form id="periodo-form" class="card">
-    <label for="desde">Desde</label>
-    <input id="desde" type="month" value="{{ desde }}" required />
-    <label for="hasta">Hasta</label>
-    <input id="hasta" type="month" value="{{ hasta }}" required />
+    <label for="desde-mes">Desde</label>
+    <div class="month-select-row">
+      <select id="desde-mes" required>
+        {% for valor, nombre in meses_nombres %}
+          <option value="{{ valor }}" {{ "selected" if valor == desde[5:7] else "" }}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+      <select id="desde-anio" required>
+        {% for anio in anios %}
+          <option value="{{ anio }}" {{ "selected" if anio|string == desde[:4] else "" }}>{{ anio }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <label for="hasta-mes">Hasta</label>
+    <div class="month-select-row">
+      <select id="hasta-mes" required>
+        {% for valor, nombre in meses_nombres %}
+          <option value="{{ valor }}" {{ "selected" if valor == hasta[5:7] else "" }}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+      <select id="hasta-anio" required>
+        {% for anio in anios %}
+          <option value="{{ anio }}" {{ "selected" if anio|string == hasta[:4] else "" }}>{{ anio }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <button type="submit">Actualizar</button>
   </form>
 
@@ -35,8 +62,8 @@
   <script>
     document.getElementById("periodo-form").addEventListener("submit", (event) => {
       event.preventDefault();
-      const desde = document.getElementById("desde").value;
-      const hasta = document.getElementById("hasta").value;
+      const desde = `${document.getElementById("desde-anio").value}-${document.getElementById("desde-mes").value}`;
+      const hasta = `${document.getElementById("hasta-anio").value}-${document.getElementById("hasta-mes").value}`;
       window.location.href = `/actividad?desde=${desde}&hasta=${hasta}`;
     });
   </script>
