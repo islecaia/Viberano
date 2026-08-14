@@ -1,0 +1,234 @@
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<h2 class="sr-only">Pantalla de aprobación de lote — resumen previo a la escritura masiva de facturas</h2>
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px 12px;display:flex;justify-content:center;">
+<div style="width:360px;background:#F8FAFC;border-radius:36px;border:7px solid #1E293B;overflow:hidden;display:flex;flex-direction:column;height:760px;font-family:'Inter',system-ui,-apple-system,sans-serif;">
+
+  <!-- Status bar -->
+  <div style="background:#fff;padding:13px 22px 8px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+    <span style="font-size:12px;font-weight:600;color:#0F172A;font-family:'Inter',sans-serif;">9:41</span>
+    <div style="display:flex;gap:5px;align-items:center;">
+      <i class="ti ti-wifi" style="font-size:13px;color:#0F172A;" aria-hidden="true"></i>
+      <i class="ti ti-battery-2" style="font-size:13px;color:#0F172A;" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div style="background:#fff;padding:2px 16px 14px;border-bottom:1px solid #E2E8F0;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:#F1F5F9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-arrow-left" style="font-size:18px;color:#0F172A;" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:600;color:#0F172A;line-height:24px;">Aprobación de lote</div>
+        <div style="font-size:13px;color:#475569;line-height:20px;">Lote&nbsp;#2025-047&nbsp;·&nbsp;24&nbsp;ene&nbsp;2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div style="flex:1;overflow-y:auto;padding:14px 14px 0;display:flex;flex-direction:column;gap:10px;">
+
+    <!-- Summary card -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #E2E8F0;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.06);">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;">
+        <i class="ti ti-layers" style="font-size:15px;color:#1E40AF;" aria-hidden="true"></i>
+        <span style="font-size:13px;font-weight:500;color:#475569;">Resumen del lote</span>
+      </div>
+
+      <!-- Two metric pills -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="background:#F1F5F9;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:11px;color:#94A3B8;margin-bottom:3px;">Documentos</div>
+          <div style="font-size:26px;font-weight:700;color:#0F172A;font-family:'JetBrains Mono',monospace;line-height:1.1;">12</div>
+        </div>
+        <div style="background:#F1F5F9;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:11px;color:#94A3B8;margin-bottom:3px;">A archivar</div>
+          <div style="font-size:16px;font-weight:700;color:#0F172A;font-family:'JetBrains Mono',monospace;line-height:1.3;">5.467,50 €</div>
+        </div>
+      </div>
+
+      <!-- Status breakdown -->
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#16A34A;flex-shrink:0;"></div>
+            <span style="font-size:11px;font-weight:600;color:#14532D;background:#DCFCE7;padding:3px 7px;border-radius:6px;">PROCESADA</span>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;">7</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#D97706;flex-shrink:0;"></div>
+            <span style="font-size:11px;font-weight:600;color:#78350F;background:#FEF3C7;padding:3px 7px;border-radius:6px;">REVISIÓN MANUAL</span>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;">3</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#7C3AED;flex-shrink:0;"></div>
+            <span style="font-size:11px;font-weight:600;color:#4C1D95;background:#F3E8FF;padding:3px 7px;border-radius:6px;">DUPLICADO IGNORADO</span>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;">1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#64748B;flex-shrink:0;"></div>
+            <span style="font-size:11px;font-weight:600;color:#334155;background:#F1F5F9;padding:3px 7px;border-radius:6px;">NO ES FACTURA</span>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;">1</span>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding-top:11px;border-top:1px solid #E2E8F0;font-size:13px;color:#475569;line-height:20px;">
+        Se archivarán <span style="color:#0F172A;font-weight:500;">7 facturas</span> en <span style="color:#0F172A;font-weight:500;">enero&nbsp;2025</span>. Los 5 documentos restantes no se escriben.
+      </div>
+    </div>
+
+    <!-- Warning banner -->
+    <div style="background:#FEF3C7;border-radius:8px;border:1px solid #D97706;padding:11px 12px;display:flex;gap:9px;align-items:flex-start;">
+      <i class="ti ti-alert-triangle" style="font-size:16px;color:#D97706;flex-shrink:0;margin-top:1px;" aria-hidden="true"></i>
+      <span style="font-size:13px;color:#78350F;line-height:20px;">Aprobar el lote archivará 7 facturas. Esta acción no se puede deshacer.</span>
+    </div>
+
+    <!-- Invoice list header -->
+    <div style="font-size:13px;font-weight:500;color:#475569;padding:0 2px;">Documentos del lote</div>
+
+    <!-- Invoice rows -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.06);margin-top:-4px;">
+
+      <!-- Row 1 PROCESADA -->
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#0F172A;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Suministros García S.L.</span>
+          <span style="font-size:15px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;white-space:nowrap;">1.234,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:#475569;font-family:'JetBrains Mono',monospace;">FAC-2025-0341</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#DCFCE7;padding:3px 7px;border-radius:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#16A34A;"></div>
+            <span style="font-size:11px;font-weight:600;color:#14532D;">PROCESADA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 PROCESADA -->
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#0F172A;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Reparaciones Norte S.A.</span>
+          <span style="font-size:15px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;white-space:nowrap;">567,50 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:#475569;font-family:'JetBrains Mono',monospace;">FAC-2025-0342</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#DCFCE7;padding:3px 7px;border-radius:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#16A34A;"></div>
+            <span style="font-size:11px;font-weight:600;color:#14532D;">PROCESADA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 REVISIÓN MANUAL -->
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;background:#FFFBEB;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#0F172A;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Materiales Ibéricos S.L.</span>
+          <span style="font-size:15px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;white-space:nowrap;">2.890,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#78350F;flex:1;min-width:0;">Proveedor no encontrado en el catálogo.</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#FEF3C7;padding:3px 7px;border-radius:6px;flex-shrink:0;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#D97706;"></div>
+            <span style="font-size:11px;font-weight:600;color:#78350F;">REVISIÓN MANUAL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 4 PROCESADA -->
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#0F172A;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Electricidad del Sur</span>
+          <span style="font-size:15px;font-weight:500;color:#0F172A;font-family:'JetBrains Mono',monospace;white-space:nowrap;">450,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:#475569;font-family:'JetBrains Mono',monospace;">FAC-2025-0344</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#DCFCE7;padding:3px 7px;border-radius:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#16A34A;"></div>
+            <span style="font-size:11px;font-weight:600;color:#14532D;">PROCESADA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 5 DUPLICADO IGNORADO -->
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#94A3B8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Suministros García S.L.</span>
+          <span style="font-size:15px;font-weight:500;color:#94A3B8;font-family:'JetBrains Mono',monospace;white-space:nowrap;">1.234,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:#94A3B8;font-family:'JetBrains Mono',monospace;">FAC-2025-0341</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#F3E8FF;padding:3px 7px;border-radius:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#7C3AED;"></div>
+            <span style="font-size:11px;font-weight:600;color:#4C1D95;">DUPLICADO IGNORADO</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 6 NO ES FACTURA -->
+      <div style="padding:11px 14px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:500;color:#94A3B8;flex:1;">[sin remitente identificado]</span>
+          <span style="font-size:15px;font-weight:500;color:#94A3B8;font-family:'JetBrains Mono',monospace;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#94A3B8;flex:1;">El documento no pudo procesarse automáticamente.</span>
+          <div style="display:flex;align-items:center;gap:4px;background:#F1F5F9;padding:3px 7px;border-radius:6px;flex-shrink:0;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#64748B;"></div>
+            <span style="font-size:11px;font-weight:600;color:#334155;">NO ES FACTURA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ver más -->
+    <div style="text-align:center;padding:2px 0 12px;">
+      <span style="font-size:13px;font-weight:500;color:#1E40AF;">Ver 6 documentos más</span>
+    </div>
+
+  </div><!-- end scrollable -->
+
+  <!-- Bottom actions -->
+  <div style="background:#fff;padding:12px 14px 8px;border-top:1px solid #E2E8F0;flex-shrink:0;">
+    <div style="display:flex;gap:10px;">
+      <button style="flex:1;height:48px;background:transparent;border:1.5px solid #CBD5E1;border-radius:8px;font-size:15px;font-weight:500;color:#0F172A;cursor:pointer;font-family:'Inter',sans-serif;">
+        Descartar
+      </button>
+      <button style="flex:2;height:48px;background:#1E40AF;border:none;border-radius:8px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">
+        <i class="ti ti-archive" style="font-size:16px;" aria-hidden="true"></i>
+        Aprobar lote
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div style="background:#fff;padding:8px 0 18px;border-top:1px solid #E2E8F0;display:flex;flex-shrink:0;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-file-text" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+        <div style="position:absolute;top:-3px;right:-5px;width:8px;height:8px;border-radius:50%;background:#DC2626;border:1.5px solid #fff;"></div>
+      </div>
+      <span style="font-size:11px;font-weight:400;color:#94A3B8;">Facturas</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <i class="ti ti-building" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+      <span style="font-size:11px;font-weight:400;color:#94A3B8;">Proveedores</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <i class="ti ti-git-compare" style="font-size:22px;color:#94A3B8;" aria-hidden="true"></i>
+      <span style="font-size:11px;font-weight:400;color:#94A3B8;">Conciliación</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <i class="ti ti-layers" style="font-size:22px;color:#1E40AF;" aria-hidden="true"></i>
+      <span style="font-size:11px;font-weight:600;color:#1E40AF;">Actividad</span>
+    </div>
+  </div>
+
+</div>
+</div>
