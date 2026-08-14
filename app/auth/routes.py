@@ -31,7 +31,11 @@ def login(payload: LoginRequest, response: Response) -> dict:
         value=token,
         httponly=True,
         samesite="lax",
-        secure=True,
+        # Con APP_ENV=development la cookie se sirve también por HTTP (p. ej. accediendo desde
+        # el móvil a la IP de la red local, donde el navegador no trata el origen como seguro):
+        # con `secure=True` fijo, el navegador descarta la cookie en silencio y la sesión nunca
+        # persiste. Por defecto (sin APP_ENV o con cualquier otro valor) se mantiene `secure=True`.
+        secure=os.environ.get("APP_ENV", "production") != "development",
     )
     return {"email": payload.email}
 

@@ -54,6 +54,9 @@ identidades listadas en `AUTHORIZED_ACCOUNTS` y la contraseña de `APP_PASSWORD`
 
 Todas las variables están documentadas en [.env.example](.env.example):
 
+- `APP_ENV` — `development` (por defecto en `.env.example`) sirve la cookie de sesión por HTTP
+  también (necesario para probar desde el móvil en la red local); usa `production` o déjala sin
+  definir en cualquier despliegue real.
 - `SESSION_SECRET`, `AUTHORIZED_ACCOUNTS`, `APP_PASSWORD` — sesión mínima de persona autorizada.
 - `IMAP_*`, `GMAIL_*`, `GRAPH_*` — credenciales de conexión de buzón según proveedor.
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_MONTHLY_BUDGET_USD` — clasificación acotada
